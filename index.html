@@ -1,0 +1,1930 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Übersicht Lineare Algebra 2 [S26]</title>
+<!--
+  Interaktive Lern-Übersicht zur Linearen Algebra 2
+  (Eisermann / Stoll / Klapproth, SoSe 2026, Uni Stuttgart).
+
+  AUFBAU:  Inhalt = Daten (siehe Konstante CATS), Layout = Code.
+           Jede Kategorie ist ein Objekt in CATS; jede Technik eine "Karte"
+           mit sichtbarer Formel, ausklappbarer Worterklärung (Idee/Bausteine/
+           warum praktisch) und ausklappbarem Rechenbeispiel.
+  Formeln: lokales KaTeX (assets/katex/, offline, kein CDN).
+           Feldwerte IMMER als String.raw setzen (sonst frisst JS die Backslashes),
+           KEINE „…" innerhalb von \( \)/\[ \]/\text{} (KaTeX kann sie nicht rendern).
+  Siehe WORKFLOW.md im selben Ordner.
+-->
+<style>
+:root{
+  --bg:#f5f6fb; --panel:#ffffff; --ink:#1b2233; --muted:#64708b; --line:#e4e8f2;
+  --accent:#5b4bd6;
+  --g1:#4f46e5; --g1-soft:#e0e7ff;   /* Eigenwerttheorie */
+  --g2:#0d9488; --g2-soft:#ccfbf1;   /* Anwendung DGL */
+  --g3:#be185d; --g3-soft:#fce7f3;   /* Skalarprodukte */
+  --g4:#b45309; --g4-soft:#fef3c7;   /* affin/multilinear */
+  --g5:#7c3aed; --g5-soft:#ede9fe;   /* Operatoren / Glossar */
+  --ok:#16a34a; --warn:#d97706;
+  --shadow:0 1px 2px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.08);
+  --radius:14px;
+}
+[data-theme="dark"]{
+  --bg:#0f141b; --panel:#161d27; --ink:#e6edf6; --muted:#94a2b6; --line:#26303d;
+  --accent:#a5b4fc;
+  --g1:#818cf8; --g1-soft:#20263c;
+  --g2:#2dd4bf; --g2-soft:#0f2e2b;
+  --g3:#f472b6; --g3-soft:#3a1426;
+  --g4:#fbbf24; --g4-soft:#332410;
+  --g5:#a78bfa; --g5-soft:#241b3a;
+  --ok:#4ade80; --warn:#fbbf24;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg); color:var(--ink);
+  font:15px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  display:flex; flex-direction:column; min-height:100%}
+a{color:var(--accent)}
+button{font:inherit; cursor:pointer}
+.btn{background:var(--panel); color:var(--ink); border:1px solid var(--line);
+  border-radius:10px; padding:6px 12px; box-shadow:var(--shadow)}
+.btn:hover{border-color:var(--accent)}
+
+/* ---------- Header ---------- */
+header{position:sticky; top:0; z-index:30; background:var(--panel);
+  border-bottom:1px solid var(--line); box-shadow:var(--shadow)}
+.hwrap{max-width:1180px; margin:0 auto; padding:10px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap}
+.brand{display:flex; align-items:center; gap:11px; font-weight:700; letter-spacing:.2px}
+.brand .logo{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:18px;
+  background:linear-gradient(135deg,var(--g1),var(--g3))}
+.brand small{display:block;font-weight:500;color:var(--muted);font-size:11.5px}
+.spacer{flex:1}
+.search{position:relative}
+.search input{width:250px; max-width:52vw; padding:8px 12px 8px 32px; border-radius:10px; border:1px solid var(--line);
+  background:var(--bg); color:var(--ink)}
+.search .ic{position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--muted)}
+.results{position:absolute; top:110%; left:0; right:0; background:var(--panel); border:1px solid var(--line);
+  border-radius:12px; box-shadow:var(--shadow); max-height:340px; overflow:auto; display:none; z-index:40}
+.results.show{display:block}
+.results a{display:block; padding:9px 12px; color:var(--ink); text-decoration:none; border-bottom:1px solid var(--line)}
+.results a:last-child{border-bottom:0}
+.results a:hover,.results a.active{background:var(--bg)}
+.results .tag{font-size:11px;color:var(--muted)}
+
+/* ---------- Main ---------- */
+main{flex:1; width:100%; max-width:1180px; margin:0 auto; padding:20px 18px 40px}
+.crumbs{display:flex; gap:6px; flex-wrap:wrap; align-items:center; color:var(--muted); font-size:13px; margin-bottom:16px}
+.crumbs a{text-decoration:none}
+.crumbs a:hover{text-decoration:underline}
+.crumbs .sep{opacity:.5}
+.hero{margin:2px 0 22px}
+.hero h1{font-size:26px; margin:0 0 6px}
+.hero p{color:var(--muted); margin:0; max-width:760px}
+
+/* ---------- Homepage tiles ---------- */
+.grp{font-size:13px; font-weight:800; letter-spacing:.7px; text-transform:uppercase; color:var(--muted); margin:26px 0 10px; display:flex; align-items:center; gap:9px}
+.grp .dot{width:11px;height:11px;border-radius:3px}
+.grp.g1 .dot{background:var(--g1)} .grp.g2 .dot{background:var(--g2)}
+.grp.g3 .dot{background:var(--g3)} .grp.g4 .dot{background:var(--g4)}
+.grp.g5 .dot{background:var(--g5)}
+.tiles{display:grid; grid-template-columns:repeat(auto-fill,minmax(258px,1fr)); gap:13px}
+.tile{display:flex; align-items:flex-start; gap:13px; padding:15px 16px; border-radius:var(--radius);
+  text-decoration:none; color:#fff; box-shadow:var(--shadow); transition:transform .09s; min-height:84px}
+.tile:hover{transform:translateY(-2px)}
+.tile .ti{font-size:27px; line-height:1; flex:none}
+.tile .tt{font-weight:700; font-size:15px}
+.tile small{display:block; font-weight:500; opacity:.93; font-size:12px; margin-top:3px; line-height:1.4}
+.tile.g1{background:linear-gradient(135deg,var(--g1),#3730a3)}
+.tile.g2{background:linear-gradient(135deg,var(--g2),#0f766e)}
+.tile.g3{background:linear-gradient(135deg,var(--g3),#9d174d)}
+.tile.g4{background:linear-gradient(135deg,var(--g4),#92400e)}
+.tile.g5{background:linear-gradient(135deg,var(--g5),#5b21b6)}
+.tile .cnt{margin-left:auto; align-self:center; font-size:11.5px; font-weight:700; background:rgba(255,255,255,.22); border-radius:99px; padding:2px 9px; white-space:nowrap}
+
+/* ---------- Material: Übungen & Prüfungen ---------- */
+.sechead{font-size:13px; font-weight:800; letter-spacing:.7px; text-transform:uppercase; color:var(--muted);
+  margin:30px 0 12px; display:flex; align-items:center; gap:9px}
+.sechead:first-of-type{margin-top:6px}
+.tile.m1{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.tile.m2{background:linear-gradient(135deg,#22d3ee,#0e7490)}
+.tile.m3{background:linear-gradient(135deg,#fb7185,#b91c1c)}
+.titlebar.m1 .ic{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.titlebar.m2 .ic{background:linear-gradient(135deg,#22d3ee,#0e7490)}
+.titlebar.m3 .ic{background:linear-gradient(135deg,#fb7185,#b91c1c)}
+.matgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(232px,1fr)); gap:12px}
+.matcard{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px 14px;
+  box-shadow:var(--shadow); display:flex; flex-direction:column; gap:8px}
+.matcard .mct{font-weight:700; font-size:14.5px}
+.matcard .mcl{display:flex; flex-wrap:wrap; gap:8px 16px; font-size:13.5px}
+.matcard .mcl a{text-decoration:none; font-weight:600}
+.matcard .mcl a:hover{text-decoration:underline}
+.matcard .mcl .none{color:var(--muted); font-weight:500}
+.note{background:var(--g1-soft); border:1px solid var(--line); border-radius:12px; padding:11px 14px;
+  font-size:13.5px; color:var(--ink); max-width:820px}
+.note code{background:var(--bg); border:1px solid var(--line); border-radius:5px; padding:1px 5px; font-size:12.5px}
+
+/* ---------- Category page ---------- */
+.titlebar{display:flex; align-items:center; gap:13px; flex-wrap:wrap; margin-bottom:6px}
+.titlebar .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:#fff;font-size:24px;flex:none}
+.titlebar.g1 .ic{background:linear-gradient(135deg,var(--g1),#3730a3)}
+.titlebar.g2 .ic{background:linear-gradient(135deg,var(--g2),#0f766e)}
+.titlebar.g3 .ic{background:linear-gradient(135deg,var(--g3),#9d174d)}
+.titlebar.g4 .ic{background:linear-gradient(135deg,var(--g4),#92400e)}
+.titlebar.g5 .ic{background:linear-gradient(135deg,var(--g5),#5b21b6)}
+.titlebar h1{font-size:23px; margin:0}
+.lead{color:var(--muted); margin:4px 0 18px; max-width:820px}
+.blockh{font-size:14px; font-weight:800; letter-spacing:.4px; color:var(--accent); margin:26px 0 12px; padding-bottom:6px; border-bottom:2px solid var(--line)}
+
+.cardgrid{display:grid; grid-template-columns:1fr; gap:14px; align-items:start}
+@media(min-width:1000px){ .cardgrid{grid-template-columns:1fr 1fr} }
+.cardgrid.wide{grid-template-columns:1fr}
+.tcard{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
+  padding:15px 17px; display:flex; flex-direction:column; gap:8px}
+.tcard h4{margin:0; font-size:15.5px; display:flex; align-items:baseline; gap:8px}
+.tcard h4 .k{font-size:11px; font-weight:700; color:var(--muted); background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:1px 7px; white-space:nowrap}
+.tdef{background:var(--bg); border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:10px;
+  padding:10px 14px; overflow-x:auto}
+.tdef p{margin:6px 0}
+.tdef p:first-child{margin-top:0} .tdef p:last-child{margin-bottom:0}
+
+/* ---------- ausklappbare Details ---------- */
+.example{border:1px solid var(--line); border-radius:10px; background:var(--bg); overflow:hidden}
+.example>summary{cursor:pointer; padding:9px 13px; font-size:13px; font-weight:600; color:var(--accent);
+  list-style:none; user-select:none}
+.example>summary::-webkit-details-marker{display:none}
+.example>summary::before{content:"\25B8  "}
+.example[open]>summary::before{content:"\25BE  "}
+.example[open]>summary{border-bottom:1px solid var(--line)}
+.example.worte>summary{color:var(--g2)}
+[data-theme="dark"] .example.worte>summary{color:var(--g2)}
+.exbody{padding:11px 15px; overflow-x:auto}
+.exbody p{margin:7px 0}
+.exbody p:first-child{margin-top:0} .exbody p:last-child{margin-bottom:0}
+.idea{display:block; margin:7px 0}
+.idea b{color:var(--ink)}
+.step{margin:8px 0 8px 0; padding-left:14px; border-left:2px solid var(--line)}
+.tip{background:var(--g1-soft); border:1px solid var(--line); border-radius:10px; padding:9px 13px; font-size:13.5px; margin:8px 0}
+.warnbox{background:var(--g4-soft); border:1px solid var(--line); border-radius:10px; padding:9px 13px; font-size:13.5px; margin:8px 0}
+
+/* ---------- Strukturkarten (SVG-Diagramme der Kategorie „Räume & Strukturen") ---------- */
+.smap{padding:6px 0 2px; overflow-x:auto}
+.smap svg{display:block; margin:0 auto; width:100%; min-width:680px; height:auto;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.smap svg text{fill:var(--ink); font-size:12px}
+.smap .t{font-weight:700; font-size:13.5px}
+.smap .m{font-size:12px}
+.smap .s{font-size:11px; fill:var(--muted)}
+.smap .lab{font-size:10.5px; fill:var(--muted)}
+.smap .bandlab{font-size:11px; font-weight:800; letter-spacing:1.2px; fill:var(--muted)}
+.smap .bx{fill:var(--panel); stroke:var(--line); stroke-width:1.4}
+.smap .b1{fill:var(--g1-soft); stroke:var(--g1); stroke-width:1.6}
+.smap .b2{fill:var(--g2-soft); stroke:var(--g2); stroke-width:1.6}
+.smap .b3{fill:var(--g3-soft); stroke:var(--g3); stroke-width:1.6}
+.smap .b4{fill:var(--g4-soft); stroke:var(--g4); stroke-width:1.6}
+.smap .b5{fill:var(--g5-soft); stroke:var(--g5); stroke-width:1.6}
+.smap .fl{stroke:var(--muted); stroke-width:1.6; fill:none}
+.smap .fl.dash{stroke-dasharray:5 4}
+.smap .arr{fill:var(--muted)}
+.smap .vec1{stroke:var(--g1); stroke-width:2.5; fill:none}
+.smap .vec4{stroke:var(--g4); stroke-width:2.5; fill:none}
+.smap .arr1{fill:var(--g1)}
+.smap .arr4{fill:var(--g4)}
+.smap .axis{stroke:var(--line); stroke-width:1.5; fill:none}
+.smap .pt{fill:var(--g4)}
+.chip{display:inline-block; padding:1px 9px; border-radius:99px; font-size:11.5px; border:1px solid; margin:0 4px 4px 0; white-space:nowrap}
+.chip.c1{background:var(--g1-soft); border-color:var(--g1)}
+.chip.c2{background:var(--g2-soft); border-color:var(--g2)}
+.chip.c3{background:var(--g3-soft); border-color:var(--g3)}
+.chip.c4{background:var(--g4-soft); border-color:var(--g4)}
+.chip.c5{background:var(--g5-soft); border-color:var(--g5)}
+
+/* ---------- Reftable (kompakte Formel-Listen) ---------- */
+.reftable{width:100%; border-collapse:collapse; margin:2px 0}
+.reftable td{padding:7px 11px; border-bottom:1px solid var(--line); vertical-align:middle}
+.reftable tr:last-child td{border-bottom:0}
+.reftable td.lhs{white-space:nowrap; width:1%}
+.reftable td.cond{color:var(--muted); font-size:12px; text-align:right; white-space:nowrap}
+
+footer{max-width:1180px; margin:0 auto; padding:16px 18px; color:var(--muted); font-size:12px}
+.kbd{font:12px/1 ui-monospace,Consolas,monospace; border:1px solid var(--line); border-bottom-width:2px; border-radius:6px; padding:2px 6px; background:var(--panel)}
+@media (max-width:560px){ .search input{width:150px} }
+</style>
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<script src="assets/katex/katex.min.js"></script>
+<script src="assets/katex/auto-render.min.js"></script>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <a class="brand" href="#/" style="text-decoration:none;color:inherit">
+      <div class="logo">λ</div>
+      <div>Übersicht Lineare Algebra 2
+        <small>\(\det(A-\lambda I)=0\ \Rightarrow\ \) verstehen statt auswendig lernen</small>
+      </div>
+    </a>
+    <div class="spacer"></div>
+    <div class="search">
+      <span class="ic">🔍</span>
+      <input id="search" type="text" placeholder="Technik suchen…" autocomplete="off">
+      <div class="results" id="results"></div>
+    </div>
+    <button class="btn" id="theme" title="Hell/Dunkel umschalten">🌙</button>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<footer>
+  Übersicht <b>Lineare Algebra 2</b> (Eisermann · Stoll · Klapproth, SoSe 2026) ·
+  Formeln offline via KaTeX · wird laufend erweitert.
+</footer>
+
+<script>
+"use strict";
+
+/* =========================================================================
+   DATEN.  CATS = geordnete Liste aller Kategorien.
+   Kategorie: { key, title, icon, g (Gruppe 1..4), tag, lead, blocks:[ {h, wide?, cards:[…]} ] }
+   Karte:     { t:Titel, k?:Kürzel, def:Formel(sichtbar), worte:Worterklärung, bsp:Rechenbeispiel }
+   Alle Text-/Formelfelder als String.raw (LaTeX in \( \) inline bzw. \[ \] display).
+   ========================================================================= */
+const GROUPS = {
+  1:"Eigenwerttheorie & Normalformen",
+  2:"Anwendung — Differentialgleichungen",
+  3:"Skalarprodukte, Orthogonalität & Geometrie",
+  4:"Affine, projektive & multilineare Strukturen"
+};
+
+const CATS = [
+
+/* ==================== 0) OPERATOREN & DEFINITIONEN ==================== */
+{ key:"operatoren", title:"Operatoren & Definitionen", icon:"∘", g:5,
+  tag:"Transponierte, ⊕, ⊗, Dualraum, Hom, End … — Notation nachschlagen",
+  lead:String.raw`Ein <b>Glossar</b> der Symbole und Operatoren aus Skript und Blättern: Was bedeutet \(A^{\mathsf T}\), \(U\oplus W\), \(V^{*}\), \(\operatorname{Hom}\), \(\otimes\)? Jeweils die knappe Definition, dazu <b>ausklappbar</b> eine Erklärung in einfachen Worten und ein kleines Beispiel. Die Grundrechenarten \(+,-,\cdot\) lassen wir bewusst weg — es geht um die weniger alltäglichen Operatoren.`,
+  blocks:[
+   { h:"Operatoren auf Matrizen & Abbildungen", cards:[
+     { t:"Transponierte", k:"Aᵀ",
+       def:String.raw`\[(A^{\mathsf T})_{ij}=A_{ji}\qquad\text{(Zeilen}\leftrightarrow\text{Spalten).}\]
+         <table class="reftable">
+         <tr><td class="lhs">\((A^{\mathsf T})^{\mathsf T}=A\)</td><td class="cond">zweimal = zurück</td></tr>
+         <tr><td class="lhs">\((A+B)^{\mathsf T}=A^{\mathsf T}+B^{\mathsf T}\)</td><td class="cond">Summe</td></tr>
+         <tr><td class="lhs">\((AB)^{\mathsf T}=B^{\mathsf T}A^{\mathsf T}\)</td><td class="cond">Reihenfolge dreht!</td></tr>
+         <tr><td class="lhs">\((\lambda A)^{\mathsf T}=\lambda A^{\mathsf T}\)</td><td class="cond">Skalar</td></tr></table>`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Man kippt die Matrix an ihrer Hauptdiagonale — aus jeder Zeile wird eine Spalte und umgekehrt. Der Eintrag aus Zeile \(i\), Spalte \(j\) landet in Zeile \(j\), Spalte \(i\).</span>
+         <span class="idea"><b>Wichtig:</b> Bei einem <b>Produkt</b> dreht sich beim Transponieren die Reihenfolge um — erst \(B^{\mathsf T}\), dann \(A^{\mathsf T}\).</span>`,
+       bsp:String.raw`<div class="step"><b>Kippen:</b> \(A=\begin{pmatrix}1&2&3\\4&5&6\end{pmatrix}\ \Rightarrow\ A^{\mathsf T}=\begin{pmatrix}1&4\\2&5\\3&6\end{pmatrix}\) — jede Zeile wird eine Spalte.</div>
+         <div class="step"><b>Reihenfolge dreht sich:</b> für \(A=\begin{pmatrix}1&2\\0&1\end{pmatrix},\ B=\begin{pmatrix}1&0\\3&1\end{pmatrix}\) ist \(AB=\begin{pmatrix}7&2\\3&1\end{pmatrix}\), also \((AB)^{\mathsf T}=\begin{pmatrix}7&3\\2&1\end{pmatrix}\).</div>
+         <div class="step">Und tatsächlich \(B^{\mathsf T}A^{\mathsf T}=\begin{pmatrix}1&3\\0&1\end{pmatrix}\begin{pmatrix}1&0\\2&1\end{pmatrix}=\begin{pmatrix}7&3\\2&1\end{pmatrix}\) ✓ — gleiches Ergebnis, aber \(B\) zuerst.</div>` },
+
+     { t:"Konjugiert-Transponierte (Adjungierte)", k:"A*",
+       def:String.raw`\[A^{*}=\overline{A}^{\mathsf T},\qquad (A^{*})_{ij}=\overline{A_{ji}}.\]Transponieren <b>und</b> komplex konjugieren. Über \(\mathbb R\) ist \(A^{*}=A^{\mathsf T}\). Regeln: \((A^{*})^{*}=A\), \((AB)^{*}=B^{*}A^{*}\).`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Wie transponieren, aber zusätzlich wird jeder Eintrag komplex konjugiert (Vorzeichen des Imaginärteils umdrehen). Bei reellen Matrizen ändert das Konjugieren nichts, dann ist es einfach die Transponierte.</span>
+         <span class="idea"><b>Wozu:</b> Sie definiert, was „senkrecht" im Komplexen heißt — z.B. sind unitäre Matrizen genau die mit \(A^{*}A=I\).</span>`,
+       bsp:String.raw`<div class="step">\(A=\begin{pmatrix}1&i\\2-i&3\end{pmatrix}\ \Rightarrow\ A^{*}=\begin{pmatrix}\overline{1}&\overline{2-i}\\\overline{i}&\overline{3}\end{pmatrix}=\begin{pmatrix}1&2+i\\-i&3\end{pmatrix}.\)</div>` },
+
+     { t:"Inverse", k:"A⁻¹",
+       def:String.raw`\[AA^{-1}=A^{-1}A=I,\qquad\text{existiert}\iff\det A\neq0.\]\((AB)^{-1}=B^{-1}A^{-1}\) (Reihenfolge dreht!). Für \(2\times2\): \(\begin{pmatrix}a&b\\c&d\end{pmatrix}^{-1}=\dfrac{1}{ad-bc}\begin{pmatrix}d&-b\\-c&a\end{pmatrix}.\)`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Die Inverse macht das, was \(A\) tut, wieder rückgängig — erst \(A\), dann \(A^{-1}\) ergibt zusammen die Identität \(I\).</span>
+         <span class="idea"><b>Bedingung:</b> Nur invertierbar, wenn \(\det A\neq0\). Beim Produkt dreht sich die Reihenfolge wie beim Transponieren um.</span>`,
+       bsp:String.raw`<div class="step">\(A=\begin{pmatrix}2&1\\1&1\end{pmatrix}\), \(\det A=2\cdot1-1\cdot1=1\).</div>
+         <div class="step">\(A^{-1}=\dfrac{1}{1}\begin{pmatrix}1&-1\\-1&2\end{pmatrix}\). Probe: \(A A^{-1}=\begin{pmatrix}1&0\\0&1\end{pmatrix}=I\) ✓.</div>` },
+
+     { t:"Spur", k:"tr",
+       def:String.raw`\[\operatorname{tr}(A)=\sum_{i=1}^{n}a_{ii}\quad(\text{Summe der Diagonale}).\]\(\operatorname{tr}(AB)=\operatorname{tr}(BA)\), \(\operatorname{tr}(T^{-1}AT)=\operatorname{tr}(A)\), und \(\operatorname{tr}(A)=\sum_i\lambda_i\) (Summe der Eigenwerte).`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Einfach die Zahlen auf der Diagonale zusammenzählen.</span>
+         <span class="idea"><b>Warum praktisch:</b> Die Spur ändert sich bei Basiswechsel nicht und ist immer gleich der Summe aller Eigenwerte — ein schneller Kontrollwert.</span>`,
+       bsp:String.raw`<div class="step">\(\operatorname{tr}\begin{pmatrix}1&5\\2&4\end{pmatrix}=1+4=5.\)</div>
+         <div class="step">Eigenwerte hier: \(6\) und \(-1\), Summe \(6+(-1)=5\) ✓.</div>` },
+
+     { t:"Kern & Bild", k:"Ker, Im",
+       def:String.raw`\[\operatorname{Ker}(f)=\{v:\ f(v)=0\},\qquad \operatorname{Im}(f)=\{f(v):\ v\in V\}.\]<b>Rangsatz:</b> \(\dim\operatorname{Ker}f+\dim\operatorname{Im}f=\dim V.\)`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Der <b>Kern</b> sammelt alle Vektoren, die auf \(0\) abgebildet werden (was \(f\) „verschluckt"). Das <b>Bild</b> ist alles, was von \(f\) tatsächlich getroffen wird.</span>
+         <span class="idea"><b>Merke:</b> Was im Kern an Dimension „verloren" geht, fehlt genau im Bild — zusammen ergeben sie die Dimension des Startraums.</span>`,
+       bsp:String.raw`<div class="step">\(f(x,y,z)=(x,y,0)\) (Projektion). \(\operatorname{Ker}f=\{(0,0,z)\}=\langle e_3\rangle\) (die \(z\)-Achse wird zu \(0\)).</div>
+         <div class="step">\(\operatorname{Im}f=\{(x,y,0)\}=\langle e_1,e_2\rangle\). Check: \(\dim\operatorname{Ker}+\dim\operatorname{Im}=1+2=3=\dim\mathbb R^3\) ✓.</div>` },
+
+     { t:"Rang", k:"rang",
+       def:String.raw`\[\operatorname{rang}(A)=\dim\operatorname{Im}(A)=\text{Zahl unabhängiger Spalten}=\text{Zahl unabhängiger Zeilen}.\]`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Wie viele Spalten (gleich viele wie Zeilen!) wirklich „neue Richtungen" liefern — der Rest ist Wiederholung. Am schnellsten mit Gauß: Zahl der Stufen (Pivots).</span>`,
+       bsp:String.raw`<div class="step">\(\begin{pmatrix}1&2&3\\2&4&6\end{pmatrix}\): Zeile 2 \(=2\cdot\)Zeile 1 \(\Rightarrow\) nur eine unabhängige Zeile \(\Rightarrow\operatorname{rang}=1.\)</div>` },
+
+     { t:"Adjunkte (komplementäre Matrix)", k:"adj",
+       def:String.raw`\[A\cdot\operatorname{adj}(A)=\det(A)\,I,\qquad A^{-1}=\frac{1}{\det A}\operatorname{adj}(A).\]Einträge: \((\operatorname{adj}A)_{ij}=(-1)^{i+j}\det(A_{ji})\) (Kofaktoren, <b>transponiert</b>).`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Man bildet zu jedem Platz die „Streichdeterminante" (Matrix ohne diese Zeile und Spalte) mit Schachbrett-Vorzeichen und transponiert das Ganze. Teilt man durch \(\det A\), bekommt man die Inverse — ganz ohne Gauß.</span>`,
+       bsp:String.raw`<div class="step">\(2\times2\): \(\operatorname{adj}\begin{pmatrix}a&b\\c&d\end{pmatrix}=\begin{pmatrix}d&-b\\-c&a\end{pmatrix}.\)</div>
+         <div class="step">\(A=\begin{pmatrix}2&1\\1&1\end{pmatrix}\Rightarrow\operatorname{adj}A=\begin{pmatrix}1&-1\\-1&2\end{pmatrix}\), und \(A\cdot\operatorname{adj}A=\begin{pmatrix}1&0\\0&1\end{pmatrix}=\det(A)\,I\) (hier \(\det A=1\)).</div>` },
+
+     { t:"Determinante", k:"det",
+       def:String.raw`Ordnet einer quadratischen Matrix eine <b>Zahl</b> zu; \(\det A\neq0\iff A\) invertierbar. \(\det(AB)=\det A\det B\), \(\det(A^{\mathsf T})=\det A\). Ausführliche Rechenwege: Kategorie <a href="#/ref/determinanten">Determinanten</a>.`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Eine einzige Kennzahl der Matrix. Sie misst u.a. das „Volumen-Verzerrungs-Faktor" der Abbildung und verrät sofort, ob die Matrix invertierbar ist (nämlich genau dann, wenn sie nicht \(0\) ist).</span>` },
+   ]},
+
+   { h:"Räume von Abbildungen", cards:[
+     { t:"Hom(V,W) — lineare Abbildungen", k:"Hom",
+       def:String.raw`\[\operatorname{Hom}_K(V,W)=\{f:V\to W\mid f\ \text{linear}\}.\]Selbst ein \(K\)-Vektorraum; \(\dim\operatorname{Hom}(V,W)=\dim V\cdot\dim W\); \(\operatorname{Hom}_K(V,W)\cong K^{m\times n}\).`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Die Menge <b>aller</b> linearen Abbildungen von \(V\) nach \(W\). Ihre Elemente sind also selbst Abbildungen — mit der Bedingung, dass jede davon linear ist.</span>
+         <span class="idea"><b>Clou:</b> Man kann zwei solche Abbildungen addieren und mit Skalaren strecken, deshalb ist \(\operatorname{Hom}\) selbst wieder ein Vektorraum (und entspricht den Matrizen).</span>`,
+       bsp:String.raw`<div class="step">\(\operatorname{Hom}(\mathbb R^2,\mathbb R^3)\cong\mathbb R^{3\times2}\): jede lineare Abbildung \(\mathbb R^2\to\mathbb R^3\) ist eine \(3\times2\)-Matrix, also \(\dim=6\).</div>` },
+
+     { t:"End(V) — Endomorphismen", k:"End",
+       def:String.raw`\[\operatorname{End}_K(V)=\operatorname{Hom}_K(V,V).\]Nicht nur Vektorraum, sondern <b>Ring</b>: man kann verketten (\(g\circ f\)), Einselement ist \(\operatorname{id}_V\). Matrixbild: \(\operatorname{End}_K(K^n)\cong K^{n\times n}\).`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Die linearen Abbildungen von \(V\) <b>in sich selbst</b> (Endo = „nach innen"). Weil Start- und Zielraum gleich sind, kann man sie hintereinanderausführen — daher ein Ring, nicht nur ein Vektorraum.</span>
+         <span class="idea"><b>Warum wichtig:</b> Eigenwerte, Diagonalisieren, Jordan — all das lebt in \(\operatorname{End}(V)\).</span>`,
+       bsp:String.raw`<div class="step">\(f,g\in\operatorname{End}(\mathbb R^2)\): sowohl \(f+g\) als auch \(g\circ f\) sind wieder in \(\operatorname{End}(\mathbb R^2)\). \(\operatorname{id}\) wirkt als „mal 1".</div>` },
+
+     { t:"GL(V), GLₙ(K) — invertierbare", k:"GL",
+       def:String.raw`\[\operatorname{GL}_n(K)=\{A\in K^{n\times n}\mid\det A\neq0\}.\]<b>Gruppe</b> unter Matrixmultiplikation (Produkt und Inverse bleiben invertierbar), aber <b>kein</b> Vektorraum (\(0\) fehlt).`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Die <b>invertierbaren</b> unter den quadratischen Matrizen. „GL" = general linear group. Sie bilden eine Gruppe: hintereinander ausführen und rückgängig machen bleibt in der Menge.</span>`,
+       bsp:String.raw`<div class="step">Basiswechsel-Matrizen \(T\) liegen in \(\operatorname{GL}_n(K)\); nur so ist \(T^{-1}AT\) überhaupt definiert.</div>` },
+
+     { t:"Dualraum V*", k:"V*",
+       def:String.raw`\[V^{*}=\operatorname{Hom}_K(V,K)\quad(\text{Linearformen}).\]\(\dim V^{*}=\dim V\); duale Basis \(b_i^{*}(b_j)=\delta_{ij}\). Mehr: Kategorie <a href="#/ref/dualtensor">Dualraum &amp; Tensorprodukt</a>.`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Der Dualraum von \(V\) enthält als Elemente <b>Abbildungen</b> — nämlich alle, die einem Vektor eine <b>Zahl</b> zuordnen (Linearformen). Bedingung: jede muss auf \(V\) linear sein.</span>
+         <span class="idea"><b>Bild dazu:</b> Eine Linearform ist ein „Messgerät", das einen Vektor auf eine einzelne Zahl herunterbricht (z.B. „lies die erste Koordinate ab").</span>`,
+       bsp:String.raw`<div class="step">\(\varphi(x_1,x_2)=3x_1-x_2\) ist linear, ordnet jedem Vektor eine Zahl zu \(\Rightarrow\varphi\in(\mathbb R^2)^{*}\).</div>
+         <div class="step">Z.B. \(\varphi(2,1)=3\cdot2-1=5\).</div>` },
+
+     { t:"Bidual V** & natürlicher Isomorphismus", k:"V**",
+       def:String.raw`\[V^{**}=(V^{*})^{*},\qquad \iota_V:V\to V^{**},\ \iota_V(v)(\varphi)=\varphi(v).\]In endlicher Dimension ist \(\iota_V\) ein <b>kanonischer</b> Isomorphismus (ohne Basiswahl!): \(V\cong V^{**}\).`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Der Dualraum vom Dualraum. Überraschung: \(V\) selbst steckt da ganz natürlich drin — ein Vektor \(v\) wird zur Vorschrift „setze mich in die Linearform ein".</span>
+         <span class="idea"><b>Feiner Punkt:</b> \(V\cong V^{**}\) geht ohne Basiswahl (kanonisch), \(V\cong V^{*}\) dagegen nur mit gewählter Basis.</span>`,
+       bsp:String.raw`<div class="step">Für \(v=(2,1)\) und \(\varphi(x)=3x_1-x_2\): \(\iota_V(v)(\varphi)=\varphi(v)=5\). Der Vektor „wertet die Form aus".</div>` },
+
+     { t:"Verkettung, Identität, Einschränkung", k:"∘ id |",
+       def:String.raw`\[(g\circ f)(v)=g(f(v)),\qquad \operatorname{id}_V(v)=v,\qquad f|_U:\ U\to W.\]\(f|_U\) ist \(f\), aber nur auf dem Teilraum \(U\) betrachtet.`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> <b>Verketten</b> heißt hintereinander ausführen — bei \(g\circ f\) zuerst \(f\), dann \(g\). Die <b>Identität</b> lässt jeden Vektor unverändert. Die <b>Einschränkung</b> \(f|_U\) schaut sich dieselbe Abbildung nur auf einem kleineren Bereich \(U\) an.</span>`,
+       bsp:String.raw`<div class="step">\(f(x)=2x\), \(g(x)=x+1\): \((g\circ f)(x)=g(2x)=2x+1\), aber \((f\circ g)(x)=f(x+1)=2x+2\) — Reihenfolge zählt!</div>` },
+   ]},
+
+   { h:"Konstruktionen mit Vektorräumen", cards:[
+     { t:"Summe & Direkte Summe", k:"U+W, U⊕W",
+       def:String.raw`\[U+W=\{u+w:\ u\in U,\ w\in W\}.\]<b>Direkt</b> (\(U\oplus W\)) genau dann, wenn \(U\cap W=\{0\}\); dann ist \(\dim(U\oplus W)=\dim U+\dim W\) und jeder Vektor <b>eindeutig</b> zerlegbar. Allgemein: \(\dim(U+W)=\dim U+\dim W-\dim(U\cap W)\).`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> \(U+W\) ist alles, was man als „ein Stück aus \(U\) plus ein Stück aus \(W\)" schreiben kann.</span>
+         <span class="idea"><b>Was heißt direkt?</b> Wenn sich \(U\) und \(W\) nur in der \(0\) überschneiden, ist die Zerlegung jedes Vektors <b>eindeutig</b> — man schreibt dann \(U\oplus W\). Sonst gibt es mehrere Zerlegungen.</span>`,
+       bsp:String.raw`<div class="step"><b>Direkt:</b> \(\mathbb R^2=\langle e_1\rangle\oplus\langle e_2\rangle\); jedes \((x,y)=x e_1+y e_2\) auf genau eine Weise.</div>
+         <div class="step"><b>Nicht direkt:</b> \(U=\langle e_1,e_2\rangle,\ W=\langle e_2,e_3\rangle\) im \(\mathbb R^3\): \(U\cap W=\langle e_2\rangle\neq\{0\}\), also \(\dim(U+W)=2+2-1=3\) (kein \(\oplus\)).</div>` },
+
+     { t:"Tensorprodukt V⊗W", k:"⊗",
+       def:String.raw`\(V\otimes W\) mit <b>universeller Eigenschaft</b>: bilineare Abbildungen aus \(V\times W\) entsprechen genau linearen aus \(V\otimes W\). \(\dim(V\otimes W)=\dim V\cdot\dim W\); Erzeuger sind die einfachen Tensoren \(v\otimes w\). Mehr: <a href="#/ref/dualtensor">Dualraum &amp; Tensorprodukt</a>.`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Das Tensorprodukt „multipliziert" zwei Vektorräume zu einem größeren — die <b>Dimensionen multiplizieren</b> sich. Bausteine sind Produkte \(v\otimes w\); allgemeine Elemente sind Summen solcher Produkte.</span>
+         <span class="idea"><b>Wozu:</b> Damit macht man aus einer Sache mit <b>zwei</b> Eingängen (bilinear) eine mit <b>einem</b> Eingang (linear).</span>`,
+       bsp:String.raw`<div class="step">\(\dim(\mathbb R^2\otimes\mathbb R^2)=2\cdot2=4\), Basis \(e_1\otimes e_1,\ e_1\otimes e_2,\ e_2\otimes e_1,\ e_2\otimes e_2\).</div>` },
+
+     { t:"Quotientenraum V/U", k:"V/U",
+       def:String.raw`Elemente sind <b>Nebenklassen</b> \(v+U=\{v+u:\ u\in U\}\); \[\dim(V/U)=\dim V-\dim U.\]`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Man „setzt \(U\) auf null": zwei Vektoren gelten als <b>gleich</b>, wenn sie sich nur um etwas aus \(U\) unterscheiden. Übrig bleibt ein kleinerer Raum, in dem \(U\) zum Nullpunkt geworden ist.</span>`,
+       bsp:String.raw`<div class="step">\(V=\mathbb R^2,\ U=\langle e_1\rangle\) (die \(x\)-Achse). In \(V/U\) zählt nur noch die \(y\)-Koordinate: \((3,7)\) und \((0,7)\) sind gleich. \(\dim(V/U)=2-1=1\).</div>` },
+
+     { t:"Annullator U°", k:"U°",
+       def:String.raw`\[U^{\circ}=\{\varphi\in V^{*}:\ \varphi|_U=0\},\qquad \dim U+\dim U^{\circ}=\dim V.\]`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Alle Linearformen, die auf ganz \(U\) den Wert \(0\) haben — die \(U\) also komplett „ignorieren". Das ist selbst ein Unterraum des Dualraums \(V^{*}\).</span>`,
+       bsp:String.raw`<div class="step">\(V=\mathbb R^3,\ U=\langle e_1\rangle\): \(U^{\circ}=\langle e_2^{*},e_3^{*}\rangle\) (Formen, die die erste Koordinate nicht ansehen), \(\dim U^{\circ}=3-1=2\).</div>` },
+   ]},
+
+   { h:"Skalarprodukt & Geometrie", cards:[
+     { t:"Skalarprodukt", k:"⟨·,·⟩",
+       def:String.raw`\(\langle\cdot,\cdot\rangle:V\times V\to K\): (sesqui-)linear, symmetrisch bzw. hermitesch, <b>positiv definit</b> (\(\langle v,v\rangle>0\) für \(v\neq0\)). Standard: \(\langle x,y\rangle=\sum_i x_i y_i\) (reell) bzw. \(\sum_i\overline{x_i}y_i\) (komplex).`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Ordnet <b>zwei</b> Vektoren eine Zahl zu und misst damit Länge und Winkel. Entscheidend: mit sich selbst kommt immer etwas Positives heraus (außer beim Nullvektor).</span>`,
+       bsp:String.raw`<div class="step">\(\langle(1,2),(3,4)\rangle=1\cdot3+2\cdot4=11\). Und \(\langle(1,2),(1,2)\rangle=1+4=5>0\) ✓.</div>` },
+
+     { t:"Norm", k:"‖·‖",
+       def:String.raw`\[\|v\|=\sqrt{\langle v,v\rangle}\quad(\text{Länge}).\]Cauchy–Schwarz: \(|\langle v,w\rangle|\le\|v\|\,\|w\|\); Dreiecksungleichung: \(\|v+w\|\le\|v\|+\|w\|\).`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Die <b>Länge</b> eines Vektors — die Wurzel aus seinem Skalarprodukt mit sich selbst. „Normiert" heißt Länge \(1\).</span>`,
+       bsp:String.raw`<div class="step">\(\|(3,4)\|=\sqrt{3^2+4^2}=\sqrt{25}=5\).</div>` },
+
+     { t:"Orthogonales Komplement U⊥", k:"U⊥",
+       def:String.raw`\[U^{\perp}=\{v\in V:\ \langle v,u\rangle=0\ \text{für alle}\ u\in U\}.\]\(V=U\oplus U^{\perp}\) und \(\dim U+\dim U^{\perp}=\dim V\).`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Alle Vektoren, die auf <b>ganz</b> \(U\) senkrecht stehen. Zusammen mit \(U\) füllt \(U^{\perp}\) den ganzen Raum lückenlos und überschneidungsfrei (direkte Summe).</span>`,
+       bsp:String.raw`<div class="step">Im \(\mathbb R^3\) mit \(U=\langle e_1,e_2\rangle\) (die \(xy\)-Ebene) ist \(U^{\perp}=\langle e_3\rangle\) (die \(z\)-Achse).</div>` },
+
+     { t:"Kronecker-Produkt A⊗B", k:"A⊗B",
+       def:String.raw`Blockmatrix: jeder Eintrag \(a_{ij}\) wird durch \(a_{ij}B\) ersetzt. Es ist die <b>Matrix</b> des Abbildungs-Tensorprodukts \(f\otimes g\); Größe \((m p)\times(n q)\).`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Die Matrix-Version von \(\otimes\): man ersetzt jeden Eintrag von \(A\) durch „dieser Eintrag mal die ganze Matrix \(B\)". So entsteht eine große Blockmatrix.</span>`,
+       bsp:String.raw`\[\begin{pmatrix}1&0\\0&2\end{pmatrix}\otimes\begin{pmatrix}1&1\\1&1\end{pmatrix}=\begin{pmatrix}1&1&0&0\\1&1&0&0\\0&0&2&2\\0&0&2&2\end{pmatrix}.\]` },
+   ]},
+
+   { h:"Symbole & Relationen", cards:[
+     { t:"Erzeugnis / Spann & Unterraum", k:"⟨…⟩, ≤",
+       def:String.raw`\[\langle v_1,\dots,v_k\rangle=\Bigl\{\textstyle\sum_i\lambda_i v_i:\ \lambda_i\in K\Bigr\}\ =\ \text{kleinster Unterraum, der die }v_i\text{ enthält}.\]\(U\le V\) bedeutet: \(U\) ist Untervektorraum (enthält \(0\), abgeschlossen unter \(+\) und \(\cdot\)).`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Der <b>Spann</b> ist alles, was man aus den gegebenen Vektoren durch Addieren und Strecken bauen kann. \(U\le V\) (Eisermanns Kurzschreibweise) heißt: \(U\) ist ein Vektorraum, der komplett in \(V\) liegt.</span>`,
+       bsp:String.raw`<div class="step">\(\langle(1,0),(0,1)\rangle=\mathbb R^2\); \(\langle(1,1)\rangle\) ist nur die Gerade durch \((1,1)\).</div>` },
+
+     { t:"Isomorphie & Ähnlichkeit", k:"≅, ∼",
+       def:String.raw`\(V\cong W\): es gibt einen <b>bijektiven</b> linearen Isomorphismus (in endl. Dim. \(\iff\dim V=\dim W\)). \(A\sim B\): \(B=T^{-1}AT\) für ein \(T\in\operatorname{GL}_n(K)\).`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> \(\cong\) heißt „im Wesentlichen derselbe Raum" (nur umbenannt). \(A\sim B\) heißt „<b>dieselbe</b> lineare Abbildung, nur in einer anderen Basis aufgeschrieben".</span>`,
+       bsp:String.raw`<div class="step">\(\mathbb R^{2\times2}\cong\mathbb R^{4}\) (beide 4-dimensional). Und \(A\sim D\), wenn \(D\) die Diagonalform von \(A\) ist.</div>` },
+
+     { t:"Teilbarkeit von Polynomen", k:"p ∣ q",
+       def:String.raw`\(p\mid q\): es gibt ein Polynom \(r\) mit \(q=p\cdot r\) (Division <b>ohne Rest</b>). Zentrales Beispiel: \(\mu_A\mid\chi_A\) (Minimalpolynom teilt char. Polynom).`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> „\(p\) teilt \(q\)" heißt: \(q\) ist ein Vielfaches von \(p\), die Division geht glatt auf. Genau wie bei Zahlen, nur mit Polynomen.</span>`,
+       bsp:String.raw`<div class="step">\((X-1)\mid(X^2-1)\), denn \(X^2-1=(X-1)(X+1)\).</div>` },
+
+     { t:"Kleine Symbole", k:"δ, dim, deg, K[X], σ",
+       def:String.raw`<table class="reftable">
+         <tr><td class="lhs">\(\delta_{ij}=\begin{cases}1&i=j\\0&i\neq j\end{cases}\)</td><td class="cond">Kronecker-Delta</td></tr>
+         <tr><td class="lhs">\(\dim_K V\)</td><td class="cond">Dimension (Zahl der Basisvektoren)</td></tr>
+         <tr><td class="lhs">\(\deg p\)</td><td class="cond">Grad eines Polynoms</td></tr>
+         <tr><td class="lhs">\(K[X]\)</td><td class="cond">Polynome über \(K\)</td></tr>
+         <tr><td class="lhs">\(\sigma(A)\)</td><td class="cond">Spektrum = Menge der Eigenwerte</td></tr></table>`,
+       worte:String.raw`<span class="idea"><b>In Worten:</b> Das <b>Kronecker-Delta</b> ist ein Schalter (1 bei gleichen Indizes, sonst 0). <b>dim</b> zählt Basisvektoren, <b>deg</b> den höchsten Exponenten, \(K[X]\) sind alle Polynome, und \(\sigma(A)\) ist einfach die Liste aller Eigenwerte.</span>`,
+       bsp:String.raw`<div class="step">\(\delta_{22}=1,\ \delta_{12}=0\); \(\deg(X^3-2X)=3\); für \(A=\begin{pmatrix}1&2\\2&1\end{pmatrix}\) ist \(\sigma(A)=\{3,-1\}\).</div>` },
+   ]}
+  ]},
+
+/* ==================== 0b) RÄUME & STRUKTUREN (Landkarte) ==================== */
+{ key:"strukturen", title:"Räume & Strukturen", icon:"🧭", g:5,
+  tag:"Gruppe · Ring · Körper · Vektorraum · Dualraum · affin — wer ist was?",
+  lead:String.raw`Auf welchen <b>Objekten</b> rechnen wir hier eigentlich die ganze Zeit? Diese Seite ist die Landkarte: Was ist ein Körper, was ein Ring, was macht der Dualraum — und wie hängt das alles zusammen? Pro Objekt nur der Kern: <b>Was ist drin, was kann es, wofür braucht man es.</b> Die Rechen-Details stehen in den Fach-Kategorien; hier geht es um den Überblick.`,
+  blocks:[
+
+   { h:"Die große Landkarte", wide:true, cards:[
+     { t:"Alles auf einen Blick", k:"Landkarte",
+       def:String.raw`<p><b>Von den Zahlen zu den Räumen:</b> oben wird das Rechnen stufenweise aufgebaut (Gruppe → Ring → Körper), in der Mitte entsteht daraus der Vektorraum, und unten steht alles, was man aus \(V\) baut. Jede Box hat weiter unten ihre eigene Karte.</p>
+<div class="smap"><svg viewBox="0 0 940 522" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Landkarte: von Gruppe über Ring und Körper zum Vektorraum und seinen Ablegern">
+<defs><marker id="mapArr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" class="arr"/></marker></defs>
+<text x="40" y="30" class="bandlab">1 · DIE ZAHLEN-WELT — HIER KOMMEN DIE SKALARE HER</text>
+<rect x="40" y="44" width="210" height="84" rx="10" class="b4"/>
+<text x="145" y="70" text-anchor="middle" class="t">Gruppe (G, ∘)</text>
+<text x="145" y="90" text-anchor="middle" class="m">eine Verknüpfung, umkehrbar</text>
+<text x="145" y="110" text-anchor="middle" class="s">(ℤ,+) · GLₙ(K) · Drehungen</text>
+<path d="M252 86 H316" class="fl" marker-end="url(#mapArr)"/>
+<text x="285" y="76" text-anchor="middle" class="lab">dazu: ·</text>
+<rect x="320" y="44" width="210" height="84" rx="10" class="b4"/>
+<text x="425" y="70" text-anchor="middle" class="t">Ring (R, +, ·)</text>
+<text x="425" y="90" text-anchor="middle" class="m">+ − · ok, ÷ nicht garantiert</text>
+<text x="425" y="110" text-anchor="middle" class="s">ℤ · K[X] · Kⁿˣⁿ · End(V)</text>
+<path d="M532 86 H596" class="fl" marker-end="url(#mapArr)"/>
+<text x="564" y="76" text-anchor="middle" class="lab">dazu: ÷</text>
+<rect x="600" y="44" width="210" height="84" rx="10" class="b4"/>
+<text x="705" y="70" text-anchor="middle" class="t">Körper (K, +, ·)</text>
+<text x="705" y="90" text-anchor="middle" class="m">alle 4 Grundrechenarten</text>
+<text x="705" y="110" text-anchor="middle" class="s">ℚ · ℝ · ℂ · 𝔽₂</text>
+<rect x="40" y="180" width="240" height="76" rx="10" class="bx"/>
+<text x="160" y="206" text-anchor="middle" class="t">(V, +) — abelsche Gruppe</text>
+<text x="160" y="228" text-anchor="middle" class="m">die Vektoren, erstmal nur mit +</text>
+<path d="M705 128 V150 H560 V166" class="fl" marker-end="url(#mapArr)"/>
+<text x="636" y="145" text-anchor="middle" class="lab">Skalare λ ∈ K</text>
+<path d="M282 218 H326" class="fl" marker-end="url(#mapArr)"/>
+<text x="304" y="207" text-anchor="middle" class="lab">Vektoren</text>
+<rect x="330" y="170" width="300" height="96" rx="12" class="b1"/>
+<text x="480" y="200" text-anchor="middle" class="t" style="font-size:15px">K-Vektorraum V</text>
+<text x="480" y="222" text-anchor="middle" class="m">v + w  und  λ·v — addieren &amp; strecken</text>
+<text x="480" y="244" text-anchor="middle" class="s">Kⁿ · Polynome · Matrizen · Funktionen</text>
+<path d="M630 200 H925 V447 H913" class="fl" marker-end="url(#mapArr)"/>
+<path d="M925 447 V489 H913" class="fl" marker-end="url(#mapArr)"/>
+<text x="778" y="190" text-anchor="middle" class="lab">…und noch mehr aus V</text>
+<text x="40" y="306" class="bandlab">2 · AUS V GEBAUT</text>
+<path d="M480 266 V290 H165 V312" class="fl" marker-end="url(#mapArr)"/>
+<rect x="40" y="316" width="250" height="76" rx="10" class="b2"/>
+<text x="165" y="340" text-anchor="middle" class="t">Hom(V, W)</text>
+<text x="165" y="359" text-anchor="middle" class="m">alle linearen Abbildungen V → W</text>
+<text x="165" y="377" text-anchor="middle" class="s">ist selbst wieder ein Vektorraum!</text>
+<path d="M292 354 H346" class="fl" marker-end="url(#mapArr)"/>
+<text x="319" y="344" text-anchor="middle" class="lab">W := V</text>
+<rect x="350" y="316" width="250" height="76" rx="10" class="b2"/>
+<text x="475" y="340" text-anchor="middle" class="t">End(V) = Hom(V, V)</text>
+<text x="475" y="359" text-anchor="middle" class="m">von V nach V — verkettbar!</text>
+<text x="475" y="377" text-anchor="middle" class="s">sogar ein Ring (∘ als Malnehmen)</text>
+<path d="M602 354 H656" class="fl" marker-end="url(#mapArr)"/>
+<text x="629" y="344" text-anchor="middle" class="lab">det ≠ 0</text>
+<rect x="660" y="316" width="250" height="76" rx="10" class="b2"/>
+<text x="785" y="340" text-anchor="middle" class="t">GL(V) — die Umkehrbaren</text>
+<text x="785" y="359" text-anchor="middle" class="m">invertierbare Endomorphismen</text>
+<text x="785" y="377" text-anchor="middle" class="s">eine Gruppe (Basiswechsel!)</text>
+<path d="M165 392 V426" class="fl" marker-end="url(#mapArr)"/>
+<text x="175" y="413" class="lab">W := K</text>
+<rect x="40" y="430" width="250" height="76" rx="10" class="b3"/>
+<text x="165" y="454" text-anchor="middle" class="t">V* = Hom(V, K) — Dualraum</text>
+<text x="165" y="473" text-anchor="middle" class="m">Messgeräte: Vektor rein, Zahl raus</text>
+<text x="165" y="491" text-anchor="middle" class="s">Linearformen φ, z.B. φ(x) = 3x₁ − x₂</text>
+<path d="M292 468 H346" class="fl" marker-end="url(#mapArr)"/>
+<text x="319" y="458" text-anchor="middle" class="lab">nochmal *</text>
+<rect x="350" y="430" width="250" height="76" rx="10" class="b3"/>
+<text x="475" y="454" text-anchor="middle" class="t">V** = (V*)* — Bidualraum</text>
+<text x="475" y="473" text-anchor="middle" class="m">misst die Messgeräte</text>
+<text x="475" y="491" text-anchor="middle" class="s">≅ V, kanonisch (endliche Dim.)</text>
+<rect x="660" y="430" width="250" height="34" rx="8" class="b5"/>
+<text x="785" y="452" text-anchor="middle" class="m">V ⊗ W — Tensorprodukt</text>
+<rect x="660" y="472" width="250" height="34" rx="8" class="b5"/>
+<text x="785" y="494" text-anchor="middle" class="m">Affiner Raum — V ohne Ursprung</text>
+</svg></div>
+<p><b>Farbcode:</b> <span class="chip c4">Zahlen-Strukturen</span><span class="chip c1">Vektorraum</span><span class="chip c2">Abbildungsräume</span><span class="chip c3">Dual-Welt</span><span class="chip c5">weitere Konstruktionen</span></p>`,
+       worte:String.raw`<span class="idea"><b>Oben — die Zahlen-Welt:</b> Gruppe (eine Verknüpfung), Ring (zwei Verknüpfungen), Körper (zwei Verknüpfungen + Teilen). Jede Stufe erbt alles von der vorigen und legt eine Fähigkeit drauf. Der Körper liefert die <b>Skalare</b>.</span>
+<span class="idea"><b>Mitte — der Vektorraum:</b> keine Zauberei, sondern ein Bausatz: eine abelsche Gruppe \((V,+)\) für die Vektoren plus ein Körper \(K\) für die Skalare.</span>
+<span class="idea"><b>Unten — aus \(V\) gebaut:</b> die Abbildungsräume \(\operatorname{Hom}\to\operatorname{End}\to\operatorname{GL}\) (immer speziellere Abbildungen) — und der Dualraum ist nichts Exotisches, sondern einfach \(\operatorname{Hom}(V,K)\). Nochmal dualisieren gibt \(V^{**}\), und das ist (kanonisch) wieder \(V\).</span>
+<span class="idea"><b>Der Kreis schließt sich:</b> \(\operatorname{Hom}\) ist selbst ein Vektorraum, \(\operatorname{End}\) ein Ring, \(\operatorname{GL}\) eine Gruppe — die Strukturen von oben tauchen bei den Abbildungen wieder auf.</span>` },
+   ]},
+
+   { h:"Die Zahlen-Welt: Gruppe → Ring → Körper", cards:[
+     { t:"Gruppe", k:"(G, ∘)",
+       def:String.raw`<span class="idea"><b>Macht:</b> genau <b>eine</b> Verknüpfung \(\circ\) — und jede Aktion lässt sich <b>rückgängig machen</b>.</span>
+<span class="idea"><b>Enthält:</b> irgendwelche Elemente (Zahlen, Matrizen, Drehungen …). Regeln: \(a\circ b\) bleibt in der Menge, Klammern egal (assoziativ), es gibt ein neutrales Element und zu jedem \(a\) ein Inverses \(a^{-1}\).</span>
+<span class="idea"><b>Braucht man für:</b> Gleichungen lösen: \(a\circ x=b\ \Rightarrow\ x=a^{-1}\circ b\). Und: der \(+\)-Teil jedes Vektorraums ist eine (abelsche) Gruppe.</span>
+<span class="idea"><b>Beispiele:</b> \((\mathbb Z,+)\), \((\mathbb R\setminus\{0\},\cdot)\), \(\operatorname{GL}_n(K)\), Drehungen der Ebene.</span>`,
+       worte:String.raw`<span class="idea"><b>Denkbild:</b> eine Gruppe ist eine Sammlung von Aktionen, die man ausführen und wieder rückgängig machen kann — Drehen und Zurückdrehen, Addieren und Subtrahieren.</span>
+<span class="idea"><b>abelsch</b> heißt: Reihenfolge egal (\(a\circ b=b\circ a\)). Vektoraddition: abelsch. Matrixmultiplikation: nicht! (\(AB\neq BA\) im Allgemeinen.)</span>`,
+       bsp:String.raw`<div class="step"><b>Gruppe:</b> \((\mathbb Z,+)\) — neutral ist \(0\), das Inverse von \(5\) ist \(-5\).</div>
+<div class="step"><b>Keine Gruppe:</b> \((\mathbb Z,\cdot)\) — das Inverse von \(2\) wäre \(\tfrac12\), liegt aber nicht in \(\mathbb Z\).</div>
+<div class="step"><b>Nicht abelsch:</b> \(\operatorname{GL}_2(\mathbb R)\) — Produkt und Inverse invertierbarer Matrizen bleiben invertierbar (\((AB)^{-1}=B^{-1}A^{-1}\)), aber die Reihenfolge zählt.</div>` },
+
+     { t:"Ring", k:"(R, +, ·)",
+       def:String.raw`<span class="idea"><b>Macht:</b> <b>zwei</b> Verknüpfungen: \(+\) und \(\cdot\). Plus, Minus, Mal gehen immer — nur <b>Teilen ist nicht versprochen</b>.</span>
+<span class="idea"><b>Enthält:</b> Dinge, mit denen man „wie mit ganzen Zahlen" rechnet: \((R,+)\) ist eine abelsche Gruppe, \(\cdot\) ist assoziativ, beides verbindet das Distributivgesetz.</span>
+<span class="idea"><b>Braucht man für:</b> Polynome \(K[X]\) (→ charakteristisches Polynom, Minimalpolynom) und Matrizen \(K^{n\times n}\) — beides Ringe, keine Körper. Genau deshalb darf man Matrizen nicht einfach „teilen".</span>
+<span class="idea"><b>Beispiele:</b> \(\mathbb Z\), \(K[X]\), \(K^{n\times n}\), \(\operatorname{End}_K(V)\).</span>`,
+       worte:String.raw`<span class="idea"><b>Denkbild:</b> Ring = Rechnen ohne Bruchstrich. In \(\mathbb Z\) kann man wunderbar rechnen, aber \(3x=1\) hat keine Lösung.</span>
+<span class="idea"><b>Achtung Nullteiler:</b> bei Matrizen kann \(AB=0\) sein, obwohl \(A,B\neq0\) — deshalb ist Kürzen verboten. Und \(\cdot\) muss nicht kommutativ sein.</span>`,
+       bsp:String.raw`<div class="step"><b>Nullteiler:</b> \(A=\begin{pmatrix}0&1\\0&0\end{pmatrix}\neq0\), aber \(A^{2}=0\). In einem Körper unmöglich!</div>
+<div class="step"><b>Warum das zählt:</b> weil \(K^{n\times n}\) ein Ring ist, kann man Polynome an Matrizen auswerten: \(p(X)=X^2-1\ \Rightarrow\ p(A)=A^2-I\). Darauf baut ganz Cayley–Hamilton.</div>` },
+
+     { t:"Körper", k:"K",
+       def:String.raw`<span class="idea"><b>Macht:</b> alle vier Grundrechenarten: \(+,\ -,\ \cdot,\ \div\) (durch alles außer \(0\)), und \(\cdot\) ist kommutativ.</span>
+<span class="idea"><b>Enthält:</b> die „Zahlen", mit denen gestreckt wird — die <b>Skalare</b> jedes Vektorraums.</span>
+<span class="idea"><b>Braucht man für:</b> jeden Vektorraum (die \(\lambda\) in \(\lambda v\) kommen aus \(K\)) und für Gauß: ohne Teilen kein Pivot-Normieren.</span>
+<span class="idea"><b>Beispiele:</b> \(\mathbb Q,\ \mathbb R,\ \mathbb C,\ \mathbb F_2=\{0,1\}\). <b>Kein</b> Körper: \(\mathbb Z\) (÷ fehlt).</span>`,
+       worte:String.raw`<span class="idea"><b>Denkbild:</b> Körper = Ring de luxe — Teilen inklusive.</span>
+<span class="idea"><b>Warum der Körper eine Rolle spielt:</b> über \(\mathbb R\) zerfällt \(X^2+1\) nicht, über \(\mathbb C\) schon — deshalb hat über \(\mathbb C\) jede Matrix Eigenwerte, über \(\mathbb R\) nicht unbedingt. Und \(\mathbb F_2\) zeigt: „Zahlen" müssen nicht die gewohnten sein.</span>`,
+       bsp:String.raw`<div class="step"><b>Exotisch, aber Körper:</b> \(\mathbb F_2=\{0,1\}\) mit \(1+1=0\) (also \(-1=1\)).</div>
+<div class="step"><b>Körper entscheidet über Eigenwerte:</b> die Drehmatrix \(\begin{pmatrix}0&-1\\1&0\end{pmatrix}\) hat \(\chi(\lambda)=\lambda^2+1\) — über \(\mathbb R\) keine Eigenwerte, über \(\mathbb C\) die Eigenwerte \(\pm i\).</div>` },
+
+     { t:"Merkhilfe: Wer darf was?", k:"Spickzettel",
+       def:String.raw`<table class="reftable">
+<tr><td class="lhs"><b>Gruppe</b> \((G,\circ)\)</td><td>eine Verknüpfung + Umkehren</td><td class="cond">\((\mathbb Z,+)\), \(\operatorname{GL}_n(K)\)</td></tr>
+<tr><td class="lhs"><b>Ring</b> \((R,+,\cdot)\)</td><td>\(+\ \ -\ \ \cdot\) — ohne \(\div\)</td><td class="cond">\(\mathbb Z\), \(K[X]\), \(K^{n\times n}\)</td></tr>
+<tr><td class="lhs"><b>Körper</b> \(K\)</td><td>\(+\ \ -\ \ \cdot\ \ \div\)</td><td class="cond">\(\mathbb Q,\ \mathbb R,\ \mathbb C,\ \mathbb F_p\)</td></tr>
+<tr><td class="lhs"><b>Vektorraum</b> \(V\)</td><td>\(v+w\) und \(\lambda v\) mit \(\lambda\in K\)</td><td class="cond">\(K^n\), Polynome, …</td></tr>
+</table>
+<p><b>Merksatz:</b> Das \(\div\) ist der ganze Unterschied zwischen Ring und Körper. Und ein Vektorraum ist „abelsche Gruppe + Skalare aus einem Körper".</p>` },
+   ]},
+
+   { h:"Vektorräume — die Hauptbühne", cards:[
+     { t:"Vektorraum", k:"V über K",
+       def:String.raw`<span class="idea"><b>Macht:</b> genau zwei Dinge: Vektoren <b>addieren</b> (\(v+w\)) und mit Skalaren <b>strecken</b> (\(\lambda v\), \(\lambda\in K\)). Mehr nicht — kein Produkt von Vektoren, keine Länge, keine Winkel (die kommen erst mit dem Skalarprodukt dazu).</span>
+<span class="idea"><b>Enthält:</b> „Vektoren" — das können Pfeile in \(K^n\) sein, aber genauso Polynome, Matrizen, Funktionen, sogar lineare Abbildungen.</span>
+<span class="idea"><b>Zutaten:</b> eine abelsche Gruppe \((V,+)\) und ein Körper \(K\), verträglich verheiratet: \(\lambda(v+w)=\lambda v+\lambda w\) usw.</span>
+<span class="idea"><b>Braucht man für:</b> … alles hier. Lineare Algebra <i>ist</i> die Theorie der Vektorräume.</span>`,
+       worte:String.raw`<span class="idea"><b>Der Clou:</b> „Vektor" beschreibt kein Aussehen, sondern ein <b>Verhalten</b>. Alles, was sich addieren und strecken lässt, zählt als Vektor — deshalb übertragen sich Basis, Dimension, Eigenwerte 1:1 auf Polynome, Matrizen und Funktionen.</span>`,
+       bsp:String.raw`<div class="step"><b>Polynome vom Grad \(\le2\):</b> Basis \((1,\ X,\ X^2)\), also \(\dim=3\). Addieren &amp; strecken: \((2X^2+3)+(X^2-X)=3X^2-X+3\) ✓ — verhält sich exakt wie \(\mathbb R^3\).</div>
+<div class="step"><b>Matrizen \(2\times2\):</b> \(\dim=4\), Basis sind die vier Matrizen mit genau einer \(1\). Deshalb \(\mathbb R^{2\times2}\cong\mathbb R^4\).</div>` },
+
+     { t:"Unterraum, Summe, Quotient — Baustellen in V", k:"U ≤ V",
+       def:String.raw`<span class="idea"><b>Unterraum \(U\le V\):</b> eine Teilmenge, die selbst ein Vektorraum ist — enthält die \(0\), und \(+\) sowie \(\lambda\cdot\) führen nicht hinaus. Bild: Geraden und Ebenen <b>durch den Ursprung</b>.</span>
+<span class="idea"><b>Daraus baut man:</b> die Summe \(U+W\), die direkte Summe \(U\oplus W\) (Zerlegung ohne Überlappung — das Werkzeug hinter Eigenraum-Zerlegungen) und den Quotienten \(V/U\) („\(U\) wird für null erklärt").</span>
+<span class="idea"><b>Details &amp; Beispiele:</b> in <a href="#/ref/operatoren">Operatoren &amp; Definitionen</a>.</span>`,
+       worte:String.raw`<span class="idea"><b>Warum wichtig:</b> praktisch jedes Objekt der Vorlesung ist ein Unterraum von irgendwas — Eigenräume, Kerne, Bilder, Annullatoren, orthogonale Komplemente.</span>`,
+       bsp:String.raw`<div class="step"><b>Unterraum:</b> \(\langle(1,1,0)\rangle\subset\mathbb R^3\) — Gerade durch \(0\) ✓.</div>
+<div class="step"><b>Kein Unterraum:</b> die Gerade durch \((1,0)\) und \((0,1)\) — sie enthält die \(0\) nicht. (Das ist ein <b>affiner</b> Teilraum → unten.)</div>` },
+   ]},
+
+   { h:"Dualraum & Bidualraum — die Messgeräte", cards:[
+     { t:"Dualraum", k:"V* = Hom(V, K)",
+       def:String.raw`<span class="idea"><b>Macht:</b> Vektoren <b>messen</b>: Vektor rein, Zahl raus.</span>
+<span class="idea"><b>Enthält:</b> keine Vektoren, sondern <b>Abbildungen</b> — alle linearen \(\varphi:V\to K\) („Linearformen"). Ist selbst wieder ein Vektorraum, in endlicher Dimension mit \(\dim V^{*}=\dim V\).</span>
+<span class="idea"><b>Braucht man für:</b> Koordinaten ablesen (duale Basis \(b_i^{*}\)), den Annullator \(U^{\circ}\) — und das Zeilen-mal-Spalte-Denken: <b>Zeilenvektoren sind Elemente von \(V^{*}\)</b>.</span>
+<span class="idea"><b>Rechnen damit:</b> <a href="#/ref/dualtensor">Dualraum &amp; Tensorprodukt</a>.</span>`,
+       worte:String.raw`<span class="idea"><b>Merkbild „Messgerät":</b> \(\varphi(x)=3x_1-x_2\) ist ein Messgerät — es bricht jeden Vektor auf eine einzige Zahl herunter.</span>
+<span class="idea"><b>Matrix-Sicht:</b> Spaltenvektor = Element von \(V\); Zeilenvektor (eine \(1\times n\)-Matrix) = Element von \(V^{*}\). Zeile mal Spalte = \(1\times1\) = Zahl — genau das <i>ist</i> das Anwenden einer Linearform.</span>`,
+       bsp:String.raw`<div class="step">\(\varphi(x)=3x_1-x_2\): \(\ \varphi(2,1)=3\cdot2-1=5\). Als Matrizen: \(\begin{pmatrix}3&-1\end{pmatrix}\begin{pmatrix}2\\1\end{pmatrix}=5\).</div>
+<div class="step"><b>Duale Standardbasis:</b> \(e_1^{*}(x)=x_1\), \(e_2^{*}(x)=x_2\) — die Koordinaten-Ablesegeräte. Jede Linearform ist eine Kombination davon: \(\varphi=3e_1^{*}-e_2^{*}\).</div>` },
+
+     { t:"Bidualraum", k:"V** = (V*)*",
+       def:String.raw`<span class="idea"><b>Macht:</b> misst die Messgeräte: Elemente von \(V^{**}\) fressen Linearformen und liefern Zahlen.</span>
+<span class="idea"><b>Der Clou:</b> jeder Vektor \(v\) <i>ist</i> schon so ein Ding — als Vorschrift „setz mich ein": \(\iota(v)(\varphi)=\varphi(v)\).</span>
+<span class="idea"><b>In endlicher Dimension:</b> \(\iota:V\to V^{**}\) ist ein Isomorphismus, und zwar <b>kanonisch</b> — ganz ohne Basiswahl. \(V\cong V^{*}\) gilt zwar auch (gleiche Dimension), aber nur mit gewählter Basis.</span>
+<span class="idea"><b>Braucht man für:</b> den feinen Unterschied „natürlich vs. basisabhängig" — und um zu sehen, warum die Dualisiererei nach zwei Schritten nichts Neues mehr bringt.</span>`,
+       worte:String.raw`<span class="idea"><b>Denkbild:</b> der Spiegel im Spiegel zeigt wieder das Original. Einmal dualisieren: neuer Raum. Zweimal: auf natürliche Weise wieder \(V\).</span>
+<span class="idea"><b>Deshalb hört das Spiel auf:</b> \(V^{***}=(V^{**})^{*}\cong V^{*}\) — ab \(V^{**}\) dreht man sich im Kreis.</span>`,
+       bsp:String.raw`<div class="step">\(v=(2,1)\), \(\varphi(x)=3x_1-x_2\): \(\ \iota(v)(\varphi)=\varphi(v)=5\). \(\iota(v)\) ist die Abbildung „werte alles bei \((2,1)\) aus".</div>
+<div class="step"><b>Bonus:</b> unter \(\iota\) entspricht der Doppel-Annullator \(U^{\circ\circ}\) wieder \(U\) selbst — das Bild rastet perfekt ein.</div>` },
+   ]},
+
+   { h:"Das Spiegel-Spiel im Bild", wide:true, cards:[
+     { t:"V → V* → V**", k:"ι: V ≅ V**",
+       def:String.raw`<p>Jede Stufe ist dasselbe Rezept: „nimm alle linearen Abbildungen der vorigen Stufe nach \(K\)". Nach zwei Stufen ist man — kanonisch — wieder zu Hause:</p>
+<div class="smap"><svg viewBox="0 0 880 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kette V nach V-Stern nach V-Doppelstern mit kanonischem Isomorphismus">
+<defs><marker id="chainArr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" class="arr"/></marker></defs>
+<rect x="410" y="6" width="52" height="30" rx="8" class="b4"/>
+<text x="436" y="27" text-anchor="middle" class="t">K</text>
+<path d="M435 60 V40" class="fl" marker-end="url(#chainArr)"/>
+<text x="446" y="52" class="lab">φ(v) — eine Zahl</text>
+<rect x="30" y="60" width="230" height="120" rx="12" class="b1"/>
+<text x="145" y="92" text-anchor="middle" class="t">V — Vektorraum</text>
+<text x="145" y="118" text-anchor="middle" class="m">Elemente: Vektoren v</text>
+<text x="145" y="142" text-anchor="middle" class="s">z.B. v = (2, 1)</text>
+<path d="M262 120 H316" class="fl" marker-end="url(#chainArr)"/>
+<text x="289" y="110" text-anchor="middle" class="lab">Hom(·, K)</text>
+<rect x="320" y="60" width="230" height="120" rx="12" class="b3"/>
+<text x="435" y="92" text-anchor="middle" class="t">V* — Dualraum</text>
+<text x="435" y="118" text-anchor="middle" class="m">Messgeräte φ: V → K</text>
+<text x="435" y="142" text-anchor="middle" class="s">z.B. φ(x) = 3x₁ − x₂</text>
+<path d="M552 120 H606" class="fl" marker-end="url(#chainArr)"/>
+<text x="579" y="110" text-anchor="middle" class="lab">nochmal *</text>
+<rect x="610" y="60" width="240" height="120" rx="12" class="b3"/>
+<text x="730" y="92" text-anchor="middle" class="t">V** — Bidualraum</text>
+<text x="730" y="118" text-anchor="middle" class="m">misst die Messgeräte</text>
+<text x="730" y="142" text-anchor="middle" class="s">ι(v): φ ↦ φ(v) — „setz v ein!“</text>
+<path d="M145 182 V220 H730 V186" class="fl dash" marker-end="url(#chainArr)"/>
+<text x="437" y="212" text-anchor="middle" class="lab">ι: V ≅ V** — kanonischer Isomorphismus (endl. Dim.), ganz ohne Basiswahl</text>
+</svg></div>`,
+       worte:String.raw`<span class="idea"><b>So liest du es:</b> \(V^{*}\) entsteht aus \(V\) durch „alle Messgeräte sammeln". Dasselbe Rezept auf \(V^{*}\) angewendet gibt \(V^{**}\) — aber statt etwas Neuem findet man dort (kanonisch verpackt) wieder die Vektoren von \(V\): jeder Vektor \(v\) wirkt als „setz mich ein"-Vorschrift \(\varphi\mapsto\varphi(v)\).</span>
+<span class="idea"><b>Der gestrichelte Pfeil</b> ist der Grund, warum man \(V\) und \(V^{**}\) in endlicher Dimension bedenkenlos identifizieren darf — es gibt keine willkürliche Wahl darin.</span>` },
+   ]},
+
+   { h:"Abbildungen: homo · endo · iso · auto", wide:true, cards:[
+     { t:"Der Namens-Decoder", k:"Hom, End, Iso, Aut",
+       def:String.raw`<p>Alle vier sind <b>lineare Abbildungen</b> — die Vorsilbe sagt nur, <i>wohin</i> sie gehen und <i>ob man sie umkehren</i> kann:</p>
+<div class="smap"><svg viewBox="0 0 780 275" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vier Abbildungstypen als 2 mal 2 Tabelle">
+<text x="320" y="34" text-anchor="middle" class="t">V → W</text>
+<text x="320" y="52" text-anchor="middle" class="s">zwei (evtl. verschiedene) Räume</text>
+<text x="610" y="34" text-anchor="middle" class="t">V → V</text>
+<text x="610" y="52" text-anchor="middle" class="s">Ziel = Start („endo“ = innen)</text>
+<text x="160" y="110" text-anchor="end" class="t">linear</text>
+<text x="160" y="128" text-anchor="end" class="s">(Struktur bleibt heil)</text>
+<rect x="180" y="70" width="280" height="90" rx="10" class="b2"/>
+<text x="320" y="100" text-anchor="middle" class="t">Homomorphismus</text>
+<text x="320" y="122" text-anchor="middle" class="m">f ∈ Hom(V, W)</text>
+<text x="320" y="144" text-anchor="middle" class="s">der Normalfall</text>
+<rect x="470" y="70" width="280" height="90" rx="10" class="b2"/>
+<text x="610" y="100" text-anchor="middle" class="t">Endomorphismus</text>
+<text x="610" y="122" text-anchor="middle" class="m">f ∈ End(V)</text>
+<text x="610" y="144" text-anchor="middle" class="s">verkettbar: f ∘ f geht!</text>
+<text x="160" y="203" text-anchor="end" class="t">linear + bijektiv</text>
+<text x="160" y="221" text-anchor="end" class="s">(umkehrbar)</text>
+<rect x="180" y="170" width="280" height="90" rx="10" class="b1"/>
+<text x="320" y="200" text-anchor="middle" class="t">Isomorphismus</text>
+<text x="320" y="222" text-anchor="middle" class="m">f umkehrbar ⇒ V ≅ W</text>
+<text x="320" y="244" text-anchor="middle" class="s">„gleicher Raum, andere Namen“</text>
+<rect x="470" y="170" width="280" height="90" rx="10" class="b5"/>
+<text x="610" y="200" text-anchor="middle" class="t">Automorphismus</text>
+<text x="610" y="222" text-anchor="middle" class="m">f ∈ GL(V)</text>
+<text x="610" y="244" text-anchor="middle" class="s">= endo + iso — bildet eine Gruppe</text>
+</svg></div>
+<p><b>Merke:</b> auto = endo + iso. Und „-morphismus" heißt immer nur: die Abbildung respektiert die Struktur, hier also \(f(v+w)=f(v)+f(w)\) und \(f(\lambda v)=\lambda f(v)\).</p>`,
+       worte:String.raw`<span class="idea"><b>Vorsilben-Griechisch:</b> <b>homo-</b> „gleichartig" (Struktur bleibt erhalten) · <b>endo-</b> „nach innen" (Ziel = Start) · <b>iso-</b> „gleich" (umkehrbar — beide Räume sind strukturell identisch) · <b>auto-</b> „selbst" (nach innen <i>und</i> umkehrbar).</span>
+<span class="idea"><b>Warum „iso" so mächtig ist:</b> \(V\cong W\) heißt „bis auf Umbenennung derselbe Raum". Deshalb darf man jeden \(n\)-dimensionalen \(K\)-Vektorraum wie \(K^n\) behandeln — Koordinaten sind nichts anderes als so ein Isomorphismus.</span>`,
+       bsp:String.raw`<div class="step"><b>Auto:</b> \(f(x,y)=(2x,\ x+y)\) auf \(\mathbb R^2\): Matrix \(\begin{pmatrix}2&0\\1&1\end{pmatrix}\), \(\det=2\neq0\) — Endomorphismus und umkehrbar, also Automorphismus.</div>
+<div class="step"><b>Iso zwischen verschiedenen Räumen:</b> Polynome vom Grad \(\le1\to\mathbb R^2\), \(p\mapsto(p(0),\,p(1))\) — linear und bijektiv, also \(K[X]_{\le1}\cong\mathbb R^2\).</div>
+<div class="step"><b>Endo, aber kein Auto:</b> das Ableiten \(p\mapsto p'\) auf Polynomen vom Grad \(\le2\) — linear, bleibt im Raum, aber alle Konstanten landen auf \(0\) (nicht injektiv).</div>` },
+
+     { t:"Plot-Twist: Abbildungen bilden selbst Strukturen", k:"Hom = VR · End = Ring · GL = Gruppe",
+       def:String.raw`<span class="idea"><b>\(\operatorname{Hom}(V,W)\)</b> ist selbst ein <b>Vektorraum</b>: Abbildungen kann man addieren und strecken. \(\dim=\dim V\cdot\dim W\).</span>
+<span class="idea"><b>\(\operatorname{End}(V)\)</b> ist sogar ein <b>Ring</b>: das Verketten \(g\circ f\) spielt „mal". (Teilen? Nicht immer — genau wie bei Matrizen.)</span>
+<span class="idea"><b>\(\operatorname{GL}(V)\)</b> — die Umkehrbaren in \(\operatorname{End}(V)\) — ist eine <b>Gruppe</b>: hier lebt der Basiswechsel \(T^{-1}AT\).</span>
+<span class="idea"><b>Und \(V^{*}=\operatorname{Hom}(V,K)\)</b> ist der Spezialfall \(W=K\): der Dualraum ist ein Abbildungsraum.</span>`,
+       worte:String.raw`<span class="idea"><b>Der Kreis schließt sich:</b> die Treppe Gruppe–Ring–Vektorraum von oben taucht bei den Abbildungen wieder auf — nur dass die Elemente jetzt Abbildungen sind statt Zahlen. Genau deshalb darf man mit Matrizen „rechnen wie mit Zahlen, nur ohne ÷ und ohne Vertauschen": \(\operatorname{End}_K(K^n)\) und \(K^{n\times n}\) sind derselbe Ring.</span>`,
+       bsp:String.raw`<div class="step"><b>Wörterbuch</b> für \(f,g\in\operatorname{End}(\mathbb R^2)\) mit Matrizen \(A,B\): \(\ f+g\leftrightarrow A+B\), \(\ g\circ f\leftrightarrow BA\), \(\ \operatorname{id}\leftrightarrow I\), „umkehrbar" \(\leftrightarrow\det\neq0\).</div>` },
+   ]},
+
+   { h:"Affin — Geometrie ohne Ursprung", wide:true, cards:[
+     { t:"Affiner Raum — Punkte statt Pfeile", k:"P + v",
+       def:String.raw`<span class="idea"><b>Macht:</b> Geometrie <b>ohne Nullpunkt</b> — kein Punkt ist ausgezeichnet.</span>
+<span class="idea"><b>Enthält:</b> <b>Punkte</b>, und im Hintergrund einen Vektorraum \(V\) der <b>Verschiebungen</b>: zu Punkten \(P,Q\) gehört der Vektor \(\overrightarrow{PQ}=Q-P\in V\), und Punkt + Vektor = Punkt.</span>
+<span class="idea"><b>Braucht man für:</b> Geraden und Ebenen, die <b>nicht</b> durch \(0\) gehen; Lösungsmengen \(x_p+\operatorname{Ker}A\) von \(Ax=b\); die ganze Geometrie in <a href="#/ref/affin">Affine &amp; projektive Räume</a>.</span>
+<div class="smap"><svg viewBox="0 0 880 290" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vergleich: Vektorraum mit Ursprung, affiner Raum nur mit Punkten">
+<defs>
+<marker id="affArr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" class="arr"/></marker>
+<marker id="affArr1" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M0 0 L10 5 L0 10 z" class="arr1"/></marker>
+<marker id="affArr4" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M0 0 L10 5 L0 10 z" class="arr4"/></marker>
+</defs>
+<rect x="20" y="20" width="400" height="250" rx="12" class="bx"/>
+<text x="220" y="46" text-anchor="middle" class="t">Vektorraum</text>
+<text x="220" y="64" text-anchor="middle" class="s">alles zeigt vom Ursprung weg</text>
+<path d="M60 225 H385" class="axis"/>
+<path d="M75 240 V85" class="axis"/>
+<circle cx="75" cy="225" r="4" style="fill:var(--ink)"/>
+<text x="60" y="243" class="t">0</text>
+<path d="M75 225 L240 120" class="vec1" marker-end="url(#affArr1)"/>
+<text x="248" y="116" class="t">v</text>
+<path d="M75 225 L330 195" class="vec1" marker-end="url(#affArr1)"/>
+<text x="338" y="192" class="t">w</text>
+<text x="220" y="260" text-anchor="middle" class="s">Vektoren = Pfeile ab 0 — der Nullpunkt ist ausgezeichnet</text>
+<path d="M424 230 H452" class="fl" marker-end="url(#affArr)"/>
+<text transform="rotate(-90 440 140)" x="440" y="140" text-anchor="middle" class="lab">Ursprung vergessen</text>
+<rect x="460" y="20" width="400" height="250" rx="12" class="bx"/>
+<text x="660" y="46" text-anchor="middle" class="t">Affiner Raum</text>
+<text x="660" y="64" text-anchor="middle" class="s">nur Punkte — kein Nullpunkt</text>
+<circle cx="540" cy="140" r="4.5" class="pt"/>
+<circle cx="760" cy="105" r="4.5" class="pt"/>
+<circle cx="590" cy="220" r="4.5" class="pt"/>
+<circle cx="690" cy="185" r="4.5" class="pt"/>
+<circle cx="805" cy="225" r="4.5" class="pt"/>
+<text x="528" y="130" class="t">P</text>
+<text x="772" y="98" class="t">Q</text>
+<path d="M545 137 L750 108" class="vec4" marker-end="url(#affArr4)"/>
+<text x="647" y="106" text-anchor="middle" class="lab">Q − P: ein Vektor aus V</text>
+<text x="660" y="260" text-anchor="middle" class="s">Punkte kann man nicht addieren — aber ihre Differenz ist ein Vektor</text>
+</svg></div>`,
+       worte:String.raw`<span class="idea"><b>Punkt vs. Vektor:</b> Punkte sind <b>Orte</b> („wo bin ich"), Vektoren sind <b>Verschiebungen</b> („wie komme ich von \(P\) nach \(Q\)"). Im Vektorraum fällt beides zusammen, weil jeder Punkt der Pfeil vom Ursprung dorthin ist. Im affinen Raum wirft man den Ursprung weg — übrig bleiben Orte plus Verschiebungen.</span>
+<span class="idea"><b>Verbotene Rechnung:</b> \(P+Q\) (zwei Orte addieren) ergibt keinen Sinn. Erlaubt: \(Q-P\) (Verschiebung) und \(P+v\) (Ort verschieben).</span>`,
+       bsp:String.raw`<div class="step"><b>Klassiker:</b> die Lösungsmenge von \(x_1+x_2=1\) in \(\mathbb R^2\) — die Gerade durch \((1,0)\) und \((0,1)\). Sie enthält die \(0\) nicht, ist also <b>kein</b> Unterraum.</div>
+<div class="step">Aber: <b>Aufpunkt + Richtungsraum</b> funktioniert: \(\{(1,0)+t\,(1,-1):\ t\in\mathbb R\}=(1,0)+\langle(1,-1)\rangle\) — ein affiner Teilraum. Genau die Struktur \(x_p+\operatorname{Ker}A\) jeder Lösungsmenge von \(Ax=b\).</div>` },
+
+     { t:"Affine Abbildung — linear + Verschiebung", k:"f(x) = Ax + b",
+       def:String.raw`<span class="idea"><b>Macht:</b> erst linear verzerren, dann verschieben: \(f(x)=Ax+b\). Linear ist der Spezialfall \(b=0\).</span>
+<span class="idea"><b>Erhält:</b> Geraden (sie gehen auf Geraden — oder auf Punkte, falls \(A\) nicht injektiv ist) und <b>Teilverhältnisse</b> (der Mittelpunkt bleibt der Mittelpunkt) — aber nicht unbedingt Längen oder Winkel.</span>
+<span class="idea"><b>Braucht man für:</b> Drehungen um beliebige Punkte, Spiegelungen an beliebigen Geraden, Fixpunkte von Affinitäten — und die Hauptachsentransformation von <a href="#/ref/quadriken">Quadriken</a>.</span>`,
+       worte:String.raw`<span class="idea"><b>Warum „linear" nicht reicht:</b> jede lineare Abbildung muss \(0\) auf \(0\) schicken (\(f(0)=A\cdot0=0\)) — eine Drehung um einen anderen Punkt kann also nicht linear sein. Affin = linear plus Verschieben erlaubt.</span>
+<span class="idea"><b>Schnelltest:</b> \(f\) ist affin \(\iff\) \(x\mapsto f(x)-f(0)\) ist linear. Beispiel: \(x\mapsto x+b\) ist <b>nicht</b> linear (für \(b\neq0\)), aber affin.</span>`,
+       bsp:String.raw`<p><b>Drehung um 90° um den Punkt \((1,0)\)</b> statt um den Ursprung:</p>
+<div class="step">Rezept „hin – drehen – zurück": \(f(x)=R\,(x-(1,0))+(1,0)\) mit \(R=\begin{pmatrix}0&-1\\1&0\end{pmatrix}\). Ausmultipliziert: \(f(x)=Rx+b\) mit \(b=(1,0)-R\,(1,0)=(1,0)-(0,1)=(1,-1)\).</div>
+<div class="step"><b>Fixpunkt-Probe:</b> \(f\) fest \(\iff x=Rx+b\iff(I-R)\,x=b\). Hier: \(\begin{pmatrix}1&1\\-1&1\end{pmatrix}x=\begin{pmatrix}1\\-1\end{pmatrix}\Rightarrow x=(1,0)\) ✓ — genau das Drehzentrum.</div>` },
+   ]},
+
+  ]},
+
+/* ==================== 0c) TENSOREN VERSTEHEN (Intuition) ==================== */
+{ key:"tensoren", title:"Tensoren verstehen", icon:"🧊", g:5,
+  tag:"Zahlenkasten, Multiplikationstabelle, ⊗ — endlich eine Vorstellung davon",
+  lead:String.raw`„Tensor" ist das Wort, bei dem alle nicken und keiner ein Bild im Kopf hat. Diese Seite baut das Bild auf: <b>ein Tensor ist ein Zahlenkasten</b>, \(v\otimes w\) ist eine <b>Multiplikationstabelle</b>, und das Ganze existiert, damit <b>bilineare</b> Rechnungen <b>linear</b> werden. Die Rechenrezepte (Kronecker-Produkt, Tensorrang) stehen in <a href="#/ref/dualtensor">Dualraum &amp; Tensorprodukt</a>.`,
+  blocks:[
+
+   { h:"Worum geht es überhaupt?", wide:true, cards:[
+     { t:"Die Kurzfassung für Eilige", k:"TL;DR",
+       def:String.raw`<span class="idea"><b>Ein Tensor in \(V\otimes W\) ist:</b> ein Zahlenkasten. Für \(K^m\otimes K^n\) konkret: eine \(m\times n\)-<b>Tabelle</b> von Koeffizienten — nicht mehr.</span>
+<span class="idea"><b>\(v\otimes w\) ist:</b> die <b>Multiplikationstabelle</b> von \(v\) und \(w\): Eintrag \((i,j)\) ist \(v_i\,w_j\). Allgemeine Tensoren sind <b>Summen</b> solcher Tabellen.</span>
+<span class="idea"><b>Warum es \(\otimes\) gibt:</b> es verwandelt „Abbildung mit zwei Eingängen" (bilinear) in „Abbildung mit <b>einem</b> Eingang" (linear) — und für lineare Abbildungen haben wir den kompletten Werkzeugkasten: Matrizen, Rang, Kern …</span>
+<span class="idea"><b>Merksatz:</b> \(\oplus\) legt Räume <i>nebeneinander</i> (Dimensionen <b>addieren</b> sich), \(\otimes\) spannt eine <i>Tabelle</i> auf (Dimensionen <b>multiplizieren</b> sich).</span>`,
+       worte:String.raw`<span class="idea"><b>Wenn du nur eins mitnimmst:</b> Tensor = Tabelle. Ein Vektor hat einen Index (\(v_i\)), eine Matrix zwei (\(a_{ij}\)), ein Tensor darf beliebig viele haben. Alles Weitere auf dieser Seite füllt dieses Bild mit Leben.</span>`,
+       bsp:String.raw`<div class="step">\(\dim(\mathbb R^2\otimes\mathbb R^3)=2\cdot3=6\). Basis: die sechs „Kästchen" \(e_i\otimes f_j\) einer \(2\times3\)-Tabelle.</div>
+<div class="step">Ein Tensor ist eine Belegung dieser Kästchen mit Zahlen: \(t=\sum_{i,j}a_{ij}\,e_i\otimes f_j\ \leftrightarrow\ \) Matrix \((a_{ij})\).</div>` },
+
+     { t:"Die Maschine: zwei Eingänge rein, einer raus", k:"universelle Eigenschaft",
+       def:String.raw`<p><b>Bilinear</b> heißt: zwei Eingänge, linear in jedem einzeln — Beispiele: Skalarprodukt \(\langle v,w\rangle\), das gewöhnliche Malnehmen \(K\times K\to K\), die \(2\times2\)-Determinante als Funktion ihrer beiden Spalten. Solche Abbildungen sind unhandlich. Also baut man einen Raum, der das <b>Verpacken</b> übernimmt:</p>
+<div class="smap"><svg viewBox="0 0 880 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Universelle Eigenschaft: bilinear wird linear">
+<defs><marker id="uniArr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" class="arr"/></marker></defs>
+<rect x="40" y="40" width="250" height="90" rx="12" class="bx"/>
+<text x="165" y="72" text-anchor="middle" class="t">V × W</text>
+<text x="165" y="94" text-anchor="middle" class="m">Paare (v, w) — zwei Eingänge</text>
+<path d="M292 85 H586" class="fl" marker-end="url(#uniArr)"/>
+<text x="439" y="72" text-anchor="middle" class="lab">⊗: (v, w) ↦ v ⊗ w — nur verpacken!</text>
+<text x="439" y="104" text-anchor="middle" class="lab">nichts wird ausgerechnet</text>
+<rect x="590" y="40" width="250" height="90" rx="12" class="b1"/>
+<text x="715" y="72" text-anchor="middle" class="t">V ⊗ W</text>
+<text x="715" y="94" text-anchor="middle" class="m">fertige Pakete — EIN Eingang</text>
+<path d="M165 132 V265 H311" class="fl" marker-end="url(#uniArr)"/>
+<text x="178" y="195" class="m">β: bilinear</text>
+<text x="178" y="213" class="s">zwei Eingänge, unhandlich</text>
+<path d="M715 132 V265 H569" class="fl dash" marker-end="url(#uniArr)"/>
+<text x="702" y="195" text-anchor="end" class="m">β̂: dieselbe Abbildung, jetzt linear</text>
+<text x="702" y="213" text-anchor="end" class="s">ein Eingang — und eindeutig!</text>
+<text x="440" y="178" text-anchor="middle" class="lab">β = β̂ ∘ ⊗ — verpacken, dann linear abarbeiten</text>
+<rect x="315" y="230" width="250" height="70" rx="12" class="b4"/>
+<text x="440" y="258" text-anchor="middle" class="t">Z — irgendein Zielraum</text>
+<text x="440" y="280" text-anchor="middle" class="s">z.B. K (Zahlen)</text>
+</svg></div>
+<p><b>Die universelle Eigenschaft in einem Satz:</b> \(V\otimes W\) ist der universelle Zwischenspeicher — jede bilineare Abbildung \(\beta\) läuft automatisch über ihn: \(\beta(v,w)=\hat\beta(v\otimes w)\) mit einem eindeutigen linearen \(\hat\beta\).</p>`,
+       worte:String.raw`<span class="idea"><b>Wichtigster Punkt:</b> \(\otimes\) rechnet <b>nichts</b> aus. \(v\otimes w\) ist ein unausgerechnetes Produkt — wie das \(X\) im Polynom: man rechnet damit, ohne je eine Zahl einzusetzen.</span>
+<span class="idea"><b>Wozu der Umweg?</b> Alles Bilineare wird nach \(V\otimes W\) „ausgelagert" und dort mit der normalen linearen Algebra abgearbeitet. Ein neuer Raum statt hundert Spezialtheorien für bilineare Abbildungen.</span>`,
+       bsp:String.raw`<div class="step"><b>Skalarprodukt als Beispiel:</b> \(\beta(v,w)=\langle v,w\rangle\) auf \(\mathbb R^2\) ist bilinear. Die lineare Version \(\hat\beta:\mathbb R^2\otimes\mathbb R^2\to\mathbb R\) ist auf den Basis-Kästchen festgelegt: \(\hat\beta(e_i\otimes e_j)=\delta_{ij}\).</div>
+<div class="step"><b>Probe:</b> \(\beta\bigl((2,1),(3,4)\bigr)=10\), und \(\hat\beta\bigl((2,1)\otimes(3,4)\bigr)=\hat\beta(6\,e_1{\otimes}e_1+8\,e_1{\otimes}e_2+3\,e_2{\otimes}e_1+4\,e_2{\otimes}e_2)=6+4=10\) ✓.</div>` },
+   ]},
+
+   { h:"Was ist ein Tensor konkret?", wide:true, cards:[
+     { t:"Zahlenkasten mit k Richtungen", k:"Stufe = Zahl der Indizes",
+       def:String.raw`<p>Die ehrlichste Antwort auf „was ist ein Tensor?": ein <b>Zahlenkasten</b>. Die <b>Stufe</b> zählt, in wie viele Richtungen der Kasten läuft — also wie viele Indizes man braucht:</p>
+<div class="smap"><svg viewBox="0 0 900 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Treppe: Skalar, Vektor, Matrix, Tensor Stufe 3">
+<defs><marker id="stufArr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" class="arr"/></marker></defs>
+<text x="100" y="66" text-anchor="middle" class="t">Skalar</text>
+<rect x="89" y="120" width="22" height="22" class="b4"/>
+<text x="100" y="136" text-anchor="middle" class="m">7</text>
+<text x="100" y="225" text-anchor="middle" class="s">0 Indizes · λ</text>
+<path d="M150 130 H220" class="fl" marker-end="url(#stufArr)"/>
+<text x="185" y="120" text-anchor="middle" class="lab">+1 Richtung</text>
+<text x="320" y="66" text-anchor="middle" class="t">Vektor</text>
+<rect x="309" y="98" width="22" height="22" class="b2"/>
+<rect x="309" y="122" width="22" height="22" class="b2"/>
+<rect x="309" y="146" width="22" height="22" class="b2"/>
+<text x="320" y="114" text-anchor="middle" class="m">2</text>
+<text x="320" y="138" text-anchor="middle" class="m">1</text>
+<text x="320" y="162" text-anchor="middle" class="m">3</text>
+<text x="320" y="225" text-anchor="middle" class="s">1 Index · vᵢ</text>
+<path d="M390 130 H460" class="fl" marker-end="url(#stufArr)"/>
+<text x="425" y="120" text-anchor="middle" class="lab">+1 Richtung</text>
+<text x="560" y="66" text-anchor="middle" class="t">Matrix</text>
+<rect x="527" y="98" width="22" height="22" class="b1"/><rect x="549" y="98" width="22" height="22" class="b1"/><rect x="571" y="98" width="22" height="22" class="b1"/>
+<rect x="527" y="120" width="22" height="22" class="b1"/><rect x="549" y="120" width="22" height="22" class="b1"/><rect x="571" y="120" width="22" height="22" class="b1"/>
+<rect x="527" y="142" width="22" height="22" class="b1"/><rect x="549" y="142" width="22" height="22" class="b1"/><rect x="571" y="142" width="22" height="22" class="b1"/>
+<text x="538" y="114" text-anchor="middle" class="m">6</text><text x="560" y="114" text-anchor="middle" class="m">2</text><text x="582" y="114" text-anchor="middle" class="m">4</text>
+<text x="538" y="136" text-anchor="middle" class="m">3</text><text x="560" y="136" text-anchor="middle" class="m">1</text><text x="582" y="136" text-anchor="middle" class="m">2</text>
+<text x="538" y="158" text-anchor="middle" class="m">0</text><text x="560" y="158" text-anchor="middle" class="m">5</text><text x="582" y="158" text-anchor="middle" class="m">1</text>
+<text x="560" y="225" text-anchor="middle" class="s">2 Indizes · aᵢⱼ</text>
+<path d="M630 130 H700" class="fl" marker-end="url(#stufArr)"/>
+<text x="665" y="120" text-anchor="middle" class="lab">+1 Richtung</text>
+<text x="790" y="66" text-anchor="middle" class="t">Tensor (Stufe 3)</text>
+<rect x="785" y="84" width="22" height="22" class="bx"/><rect x="807" y="84" width="22" height="22" class="bx"/><rect x="829" y="84" width="22" height="22" class="bx"/>
+<rect x="785" y="106" width="22" height="22" class="bx"/><rect x="807" y="106" width="22" height="22" class="bx"/><rect x="829" y="106" width="22" height="22" class="bx"/>
+<rect x="785" y="128" width="22" height="22" class="bx"/><rect x="807" y="128" width="22" height="22" class="bx"/><rect x="829" y="128" width="22" height="22" class="bx"/>
+<rect x="771" y="98" width="22" height="22" class="b3"/><rect x="793" y="98" width="22" height="22" class="b3"/><rect x="815" y="98" width="22" height="22" class="b3"/>
+<rect x="771" y="120" width="22" height="22" class="b3"/><rect x="793" y="120" width="22" height="22" class="b3"/><rect x="815" y="120" width="22" height="22" class="b3"/>
+<rect x="771" y="142" width="22" height="22" class="b3"/><rect x="793" y="142" width="22" height="22" class="b3"/><rect x="815" y="142" width="22" height="22" class="b3"/>
+<text x="790" y="225" text-anchor="middle" class="s">3 Indizes · tᵢⱼₖ (Stapel von Tabellen)</text>
+<text x="450" y="252" text-anchor="middle" class="s">Ein Tensor ist ein Zahlenkasten — die Stufe zählt die Richtungen (Indizes).</text>
+</svg></div>
+<p>In LA2 fast immer <b>Stufe 2</b>: Tensoren in \(V\otimes W\) entsprechen Matrizen. Erst ab drei Faktoren (\(U\otimes V\otimes W\)) wird es wirklich neu — und deutlich schwerer.</p>`,
+       worte:String.raw`<span class="idea"><b>Alltagsbilder:</b> Vektor = Liste. Matrix = Tabelle. Stufe 3 = Excel-Datei mit mehreren Blättern. Stufe 4 = Ordner voller Excel-Dateien … es sind einfach Zahlen mit mehreren Sortier-Richtungen.</span>
+<span class="idea"><b>Physik-Wort „Spannungstensor":</b> ein Zahlenkasten, der zu je zwei Richtungen (Fläche, Kraftrichtung) eine Zahl ausspuckt — Stufe 2, also „nur" eine Matrix mit Bedeutung.</span>`,
+       bsp:String.raw`<div class="step">\(t=6\,e_1{\otimes}f_1+2\,e_1{\otimes}f_2+4\,e_1{\otimes}f_3+3\,e_2{\otimes}f_1+1\,e_2{\otimes}f_2+2\,e_2{\otimes}f_3\ \in\mathbb R^2\otimes\mathbb R^3\).</div>
+<div class="step">Sieht wild aus — <b>ist</b> aber nur die Tabelle \(\begin{pmatrix}6&2&4\\3&1&2\end{pmatrix}\). Symbolkette und Zahlenkasten sind dasselbe Objekt.</div>` },
+
+     { t:"v ⊗ w = die Multiplikationstabelle", k:"(v⊗w)ᵢⱼ = vᵢ·wⱼ",
+       def:String.raw`<p>Der wichtigste Spezialfall: das Paket \(v\otimes w\) selbst. Als Zahlenkasten ist es die <b>Multiplikationstabelle</b> der beiden Vektoren — und rechts daneben der Grund, warum nicht jeder Tensor so aussieht:</p>
+<div class="smap"><svg viewBox="0 0 900 285" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="v tensor w als Multiplikationstabelle, daneben ein verschraenkter Tensor">
+<text x="240" y="42" text-anchor="middle" class="t">v ⊗ w = Multiplikationstabelle</text>
+<text x="163" y="105" text-anchor="end" class="t">w →</text>
+<rect x="170" y="88" width="26" height="26" class="b4"/><rect x="196" y="88" width="26" height="26" class="b4"/><rect x="222" y="88" width="26" height="26" class="b4"/>
+<text x="183" y="106" text-anchor="middle" class="m">3</text><text x="209" y="106" text-anchor="middle" class="m">1</text><text x="235" y="106" text-anchor="middle" class="m">2</text>
+<text x="149" y="112" text-anchor="middle" class="t">v</text>
+<text x="149" y="126" text-anchor="middle" class="t">↓</text>
+<rect x="136" y="120" width="26" height="26" class="b2"/><rect x="136" y="146" width="26" height="26" class="b2"/>
+<text x="149" y="138" text-anchor="middle" class="m">2</text><text x="149" y="164" text-anchor="middle" class="m">1</text>
+<rect x="170" y="120" width="26" height="26" class="b1"/><rect x="196" y="120" width="26" height="26" class="b1"/><rect x="222" y="120" width="26" height="26" class="b1"/>
+<rect x="170" y="146" width="26" height="26" class="b1"/><rect x="196" y="146" width="26" height="26" class="b1"/><rect x="222" y="146" width="26" height="26" class="b1"/>
+<text x="183" y="138" text-anchor="middle" class="m">6</text><text x="209" y="138" text-anchor="middle" class="m">2</text><text x="235" y="138" text-anchor="middle" class="m">4</text>
+<text x="183" y="164" text-anchor="middle" class="m">3</text><text x="209" y="164" text-anchor="middle" class="m">1</text><text x="235" y="164" text-anchor="middle" class="m">2</text>
+<text x="262" y="132" class="m">= v ⊗ w</text>
+<text x="262" y="152" class="s">Eintrag (i, j): vᵢ · wⱼ</text>
+<text x="262" y="170" class="s">Rang 1: Zeile 1 = 2 · Zeile 2</text>
+<path d="M455 55 V245 " class="axis"/>
+<text x="665" y="42" text-anchor="middle" class="t">Summe: meist keine Tabelle EINES Paares</text>
+<text x="573" y="82" text-anchor="middle" class="m">e₁⊗e₁ + e₂⊗e₂</text>
+<rect x="547" y="100" width="26" height="26" class="b3"/><rect x="573" y="100" width="26" height="26" class="bx"/>
+<rect x="547" y="126" width="26" height="26" class="bx"/><rect x="573" y="126" width="26" height="26" class="b3"/>
+<text x="560" y="118" text-anchor="middle" class="m">1</text><text x="586" y="118" text-anchor="middle" class="m">0</text>
+<text x="560" y="144" text-anchor="middle" class="m">0</text><text x="586" y="144" text-anchor="middle" class="m">1</text>
+<text x="630" y="112" class="m">Rang 2 — als reines</text>
+<text x="630" y="130" class="m">Produkt v⊗w unmöglich:</text>
+<text x="630" y="150" class="s">„verschränkt"!</text>
+<text x="450" y="272" text-anchor="middle" class="s">Schnelltest: Koeffizienten-Matrix hinschreiben — Rang ≤ 1 ⇔ reines Produkt v⊗w.</text>
+</svg></div>`,
+       worte:String.raw`<span class="idea"><b>Matrix-Sicht:</b> \(v\otimes w\) ist das <b>äußere Produkt</b> \(v\,w^{\mathsf T}\) — Spalte mal Zeile (nicht Zeile mal Spalte, das gäbe eine Zahl!). Ergebnis: eine Rang-1-Matrix.</span>
+<span class="idea"><b>„Verschränkt":</b> bei \(e_1{\otimes}e_1+e_2{\otimes}e_2\) gibt es kein „welches \(v\), welches \(w\)" mehr — die Summe hat die Paar-Information zerstört. In der Quantenmechanik heißt genau dieses Phänomen <b>Verschränkung</b>.</span>`,
+       bsp:String.raw`<div class="step">\(v=(2,1)\), \(w=(3,1,2)\): Tabelle \(\begin{pmatrix}2\cdot3&2\cdot1&2\cdot2\\1\cdot3&1\cdot1&1\cdot2\end{pmatrix}=\begin{pmatrix}6&2&4\\3&1&2\end{pmatrix}\), Rang \(1\) ✓.</div>
+<div class="step"><b>Gegenprobe Identität:</b> \(\begin{pmatrix}1&0\\0&1\end{pmatrix}\) hat Rang \(2\) — es gibt keine Vektoren mit \(v_iw_j=\delta_{ij}\) (sonst wäre \(v_1w_2=0\), aber \(v_1w_1=v_2w_2=1\) — Widerspruch).</div>` },
+   ]},
+
+   { h:"Die Spielregeln", cards:[
+     { t:"Rechenregeln: alles bilinear", k:"Klammern ausmultiplizieren",
+       def:String.raw`<table class="reftable">
+<tr><td class="lhs">\((v+v')\otimes w=v\otimes w+v'\otimes w\)</td><td class="cond">links ausmultiplizieren</td></tr>
+<tr><td class="lhs">\(v\otimes(w+w')=v\otimes w+v\otimes w'\)</td><td class="cond">rechts ausmultiplizieren</td></tr>
+<tr><td class="lhs">\((\lambda v)\otimes w=\lambda(v\otimes w)=v\otimes(\lambda w)\)</td><td class="cond">Skalar darf wandern</td></tr>
+<tr><td class="lhs">\(v\otimes 0=0=0\otimes w\)</td><td class="cond">Null schluckt alles</td></tr>
+</table>
+<p><b>Kurz:</b> \(\otimes\) verhält sich wie ein „mal", das man nicht ausrechnet — rechnen wie beim Klammern-Ausmultiplizieren.</p>`,
+       worte:String.raw`<span class="idea"><b>Faustregel:</b> alles, was du vom Ausmultiplizieren \((a+b)(c+d)\) kennst, gilt — nur die Reihenfolge der Faktoren darfst du nie tauschen.</span>`,
+       bsp:String.raw`<div class="step">\((e_1+e_2)\otimes(f_1-f_2)=e_1{\otimes}f_1-e_1{\otimes}f_2+e_2{\otimes}f_1-e_2{\otimes}f_2\).</div>
+<div class="step">Als Tabelle: \(\begin{pmatrix}1&-1\\1&-1\end{pmatrix}\) — Rang \(1\) ✓ (klar: es <i>ist</i> ja ein reines Produkt).</div>` },
+
+     { t:"Vorsicht, typische Fallen", k:"⚠",
+       def:String.raw`<span class="idea"><b>Falle 1:</b> \(v\otimes w\neq w\otimes v\) — die Tabelle wird transponiert, und für \(v\in\mathbb R^2,\ w\in\mathbb R^3\) haben \(2\times3\) und \(3\times2\) nicht mal dasselbe Format.</span>
+<span class="idea"><b>Falle 2:</b> nicht jedes Element von \(V\otimes W\) ist ein reines Produkt \(v\otimes w\) — die reinen Produkte sind nur die <b>Bausteine</b>. (So wie nicht jedes Polynom ein Monom ist.)</span>
+<span class="idea"><b>Falle 3:</b> die <b>Summendarstellung</b> ist nicht eindeutig — derselbe Tensor lässt sich verschieden schreiben. Eindeutig ist nur die Koeffizienten-Tabelle (bei festen Basen).</span>`,
+       worte:String.raw`<span class="idea"><b>Rettung in allen Fällen:</b> denk in Tabellen, nicht in Symbolketten. Zwei wild verschiedene Summen können dieselbe Tabelle ergeben — dann sind sie derselbe Tensor. Erst Koeffizienten einsortieren, dann vergleichen.</span>`,
+       bsp:String.raw`<div class="step">\(e_1{\otimes}f_1+e_1{\otimes}f_2\ \) und \(\ e_1\otimes(f_1+f_2)\): sehen verschieden aus, sind aber beide die Tabelle \(\begin{pmatrix}1&1\\0&0\end{pmatrix}\) — <b>gleicher</b> Tensor.</div>` },
+
+     { t:"Einfach vs. verschränkt — der Tensorrang", k:"rang",
+       def:String.raw`<span class="idea"><b>Tensorrang</b> = die kleinste Zahl reiner Produkte, deren Summe den Tensor ergibt.</span>
+<span class="idea"><b>Für Stufe 2 geschenkt:</b> Tensorrang = Matrixrang der Koeffizienten-Tabelle. Insbesondere: <b>einfach</b> (\(t=v\otimes w\)) \(\iff\) Rang \(\le1\).</span>
+<span class="idea"><b>Braucht man für:</b> Blatt 25 (ist \(t\) ein reines Produkt?) — und als Konzept überall, wo man Tensoren „komprimieren" will.</span>`,
+       worte:String.raw`<span class="idea"><b>Rang-1-Test durch Hinschauen:</b> alle Zeilen der Tabelle sind Vielfache einer einzigen Zeile.</span>
+<span class="idea"><b>Warnung Stufe 3:</b> ab drei Faktoren gibt es keine Matrix mehr, deren Rang man ablesen könnte — die Tensorrang-Bestimmung wird dort NP-schwer. Stufe 2 ist die gemütliche Welt.</span>`,
+       bsp:String.raw`<div class="step">\(e_1{\otimes}e_1+e_2{\otimes}e_2\ \leftrightarrow\ I=\begin{pmatrix}1&0\\0&1\end{pmatrix}\), Rang \(2\): man braucht wirklich zwei Summanden — verschränkt.</div>` },
+
+     { t:"⊕ vs. ⊗ — nebeneinander vs. Tabelle", k:"m+n vs. m·n",
+       def:String.raw`<div class="smap"><svg viewBox="0 0 880 235" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Direkte Summe addiert Dimensionen, Tensorprodukt multipliziert sie">
+<text x="190" y="60" text-anchor="middle" class="t">V ⊕ W — nebeneinander legen</text>
+<rect x="120" y="100" width="26" height="26" class="b1"/><rect x="146" y="100" width="26" height="26" class="b1"/>
+<rect x="184" y="100" width="26" height="26" class="b3"/><rect x="210" y="100" width="26" height="26" class="b3"/><rect x="236" y="100" width="26" height="26" class="b3"/>
+<text x="190" y="165" text-anchor="middle" class="s">dim: 2 + 3 = 5 Kästchen</text>
+<path d="M440 45 V190" class="axis"/>
+<text x="620" y="60" text-anchor="middle" class="t">V ⊗ W — Tabelle aufspannen</text>
+<text x="593" y="88" text-anchor="middle" class="s">w₁</text><text x="619" y="88" text-anchor="middle" class="s">w₂</text><text x="645" y="88" text-anchor="middle" class="s">w₃</text>
+<text x="568" y="112" text-anchor="end" class="s">v₁</text>
+<text x="568" y="138" text-anchor="end" class="s">v₂</text>
+<rect x="580" y="95" width="26" height="26" class="b2"/><rect x="606" y="95" width="26" height="26" class="b2"/><rect x="632" y="95" width="26" height="26" class="b2"/>
+<rect x="580" y="121" width="26" height="26" class="b2"/><rect x="606" y="121" width="26" height="26" class="b2"/><rect x="632" y="121" width="26" height="26" class="b2"/>
+<text x="620" y="165" text-anchor="middle" class="s">dim: 2 · 3 = 6 Kästchen</text>
+<text x="440" y="215" text-anchor="middle" class="s">⊕: ein v UND ein w — ⊗: für jede Kombination (i, j) ein eigenes Kästchen</text>
+</svg></div>`,
+       worte:String.raw`<span class="idea"><b>\(\oplus\)-Element:</b> „ein \(v\) und ein \(w\) nebeneinander" — im Grunde ein längerer Vektor, Dimensionen addieren sich.</span>
+<span class="idea"><b>\(\otimes\)-Element:</b> jede Index-Kombination \((i,j)\) bekommt einen eigenen Koeffizienten — Dimensionen multiplizieren sich. Deshalb explodiert \(\otimes\) so schnell: \(n\) Qubits leben in einem \(2^n\)-dimensionalen Tensorprodukt — genau das macht Quantencomputer mächtig (und schwer zu simulieren).</span>`,
+       bsp:String.raw`<div class="step">\(\mathbb R^2\oplus\mathbb R^3\): \(\dim=5\), Element z.B. \(\bigl((2,1),(3,1,2)\bigr)\) — fünf Zahlen.</div>
+<div class="step">\(\mathbb R^2\otimes\mathbb R^3\): \(\dim=6\), Element = \(2\times3\)-Tabelle — sechs Zahlen. Klingt ähnlich, ist es ab \(\dim>2\) überhaupt nicht mehr: \(10+10=20\), aber \(10\cdot10=100\).</div>` },
+   ]},
+
+   { h:"Wo Tensoren wirklich stecken", cards:[
+     { t:"Plot-Twist: Matrizen sind Tensoren", k:"V*⊗W ≅ Hom(V,W)",
+       def:String.raw`<span class="idea"><b>Die Brücke:</b> \(V^{*}\otimes W\cong\operatorname{Hom}(V,W)\). Das Paket \(\varphi\otimes w\) wirkt als Abbildung \(v\mapsto\varphi(v)\cdot w\) — erst <b>messen</b> (\(\varphi\)), dann in Richtung \(w\) <b>losschicken</b>.</span>
+<span class="idea"><b>Übersetzung:</b> reiner Tensor \(\varphi\otimes w\) \(\leftrightarrow\) Rang-1-Matrix. Jede Matrix = Summe von Rang-1-Matrizen = Tensor. Du hast also nie ohne Tensoren gerechnet.</span>`,
+       worte:String.raw`<span class="idea"><b>Warum das cool ist:</b> die SVD (Singulärwertzerlegung) schreibt eine Matrix als möglichst „kurze" Summe reiner Produkte — das ist Tensorrang in Aktion, und der Rang der Matrix zählt die nötigen Summanden.</span>`,
+       bsp:String.raw`<div class="step">\(\varphi=e_1^{*}\) (liest \(x_1\) ab), \(w=e_2\). Dann \((\varphi\otimes w)(v)=v_1\cdot e_2\): schickt \(e_1\mapsto e_2\), \(e_2\mapsto 0\).</div>
+<div class="step">Als Matrix: \(\begin{pmatrix}0&0\\1&0\end{pmatrix}\) — Rang \(1\) ✓. Probe: \(\begin{pmatrix}0&0\\1&0\end{pmatrix}\begin{pmatrix}v_1\\v_2\end{pmatrix}=\begin{pmatrix}0\\v_1\end{pmatrix}=v_1 e_2\) ✓.</div>` },
+
+     { t:"Der Werkzeugkasten & der Rest der Welt", k:"wo ⊗ auftaucht",
+       def:String.raw`<span class="idea"><b>Bilinearformen:</b> Skalarprodukte und Quadriken sind Elemente von \(V^{*}\otimes V^{*}\) — Stufe-2-Tensoren mit Bedeutung (→ <a href="#/ref/bilinearformen">Skalarprodukte &amp; Bilinearformen</a>).</span>
+<span class="idea"><b>Kronecker-Produkt \(A\otimes B\):</b> die Matrix von \(f\otimes g\) — Rechnen mit gekoppelten Systemen (→ <a href="#/ref/dualtensor">Dualraum &amp; Tensorprodukt</a>).</span>
+<span class="idea"><b>Draußen in der Welt:</b> Trägheits- und Spannungstensor (Physik), Quantenzustände zusammengesetzter Systeme (\(\mathcal H_1\otimes\mathcal H_2\)), und „TensorFlow"/Deep Learning = Rechnen mit großen Zahlenkästen.</span>`,
+       worte:String.raw`<span class="idea"><b>Fürs Blatt/die Prüfung heißt „Tensor" konkret:</b> Kronecker-Produkt hinschreiben, Tensorrang über den Matrixrang bestimmen, natürliche Isomorphismen (wie \(V^{*}\otimes W\cong\operatorname{Hom}(V,W)\)) erkennen. Der Rest ist Weltwissen, das ab jetzt ein Bild hat.</span>` },
+   ]},
+
+  ]},
+
+/* ============================ 1) DETERMINANTEN ============================ */
+{ key:"determinanten", title:"Determinanten", icon:"▦", g:1,
+  tag:"Sarrus, Laplace, Zeilenumformungen, Regeln, Cramer",
+  lead:String.raw`Die Determinante ist <b>eine Zahl</b>, die einer quadratischen Matrix zugeordnet wird. Ist sie \(\neq0\), ist die Matrix invertierbar. Man braucht sie ständig — vor allem für Eigenwerte (\(\det(A-\lambda I)=0\)). Je nach Matrix ist ein anderer Rechenweg am schnellsten.`,
+  blocks:[
+   { h:"Berechnungsmethoden", cards:[
+     { t:"Regel von Sarrus", k:"nur 3×3",
+       def:String.raw`\[\det\begin{pmatrix}a&b&c\\d&e&f\\g&h&i\end{pmatrix}=aei+bfg+cdh-ceg-afh-bdi\]`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> Bei genau \(3\times3\) gibt es eine feste „Schema-Formel", die man stur anwendet — kein Umformen, kein Nachdenken.</span>
+         <span class="idea"><b>Bausteine:</b> drei Produkte entlang der Diagonalen nach rechts-unten (Vorzeichen \(+\)) und drei nach rechts-oben (Vorzeichen \(-\)); am Rand „läuft man um" (daher „Jägerzaun"). Es ist nur die allgemeine Leibniz-Formel mit ihren \(3!=6\) Summanden, ausgeschrieben.</span>
+         <span class="idea"><b>Warum praktisch:</b> der schnellste Handgriff, wenn die Matrix wirklich \(3\times3\) ist.</span>
+         <div class="warnbox"><b>Nur für \(n=3\)!</b> Für \(n\ge4\) ist eine analoge „Diagonalen-Regel" <b>falsch</b>. Dann Laplace oder Zeilenumformungen benutzen.</div>`,
+       bsp:String.raw`<p>Gesucht \(\det A\) für \(A=\begin{pmatrix}-2&1&0\\-1&0&-1\\1&2&3\end{pmatrix}\) (Blatt 14 V1a).</p>
+         <div class="step"><b>Diagonalen \(\searrow\) (plus):</b><br>\((-2)\cdot0\cdot3=0\), \(\quad1\cdot(-1)\cdot1=-1\), \(\quad0\cdot(-1)\cdot2=0\). Summe \(=-1\).</div>
+         <div class="step"><b>Diagonalen \(\nearrow\) (minus):</b><br>\(0\cdot0\cdot1=0\), \(\quad(-2)\cdot(-1)\cdot2=4\), \(\quad1\cdot(-1)\cdot3=-3\). Summe \(=1\).</div>
+         <div class="step">\(\det A=(\text{plus})-(\text{minus})=(-1)-(1)=\boxed{-2}.\)</div>` },
+
+     { t:"Laplace-Entwicklung", k:"nach Zeile/Spalte",
+       def:String.raw`Entwicklung nach Zeile \(i\):\[\det A=\sum_{j=1}^{n}(-1)^{i+j}\,a_{ij}\,\det A_{ij},\]\(A_{ij}\) = Matrix ohne Zeile \(i\), Spalte \(j\). Vorzeichen-Schachbrett \(\begin{smallmatrix}+&-&+\\-&+&-\\+&-&+\end{smallmatrix}\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> eine große Determinante auf mehrere kleinere zurückführen und so lange verkleinern, bis \(2\times2\) oder \(3\times3\) übrig bleibt.</span>
+         <span class="idea"><b>Bausteine:</b> man wählt <b>eine</b> Zeile oder Spalte; jeder Eintrag wird mit der Determinante der „Streichmatrix" (ohne seine Zeile/Spalte) und dem Schachbrett-Vorzeichen multipliziert und alles addiert.</span>
+         <span class="idea"><b>Warum praktisch:</b> entwickelt man nach der Zeile/Spalte mit den <b>meisten Nullen</b>, fallen fast alle Terme weg — dann geht es sehr schnell.</span>`,
+       bsp:String.raw`<p>\(B=\begin{pmatrix}4&3&0&2&1\\1&0&0&0&1\\0&0&1&1&0\\0&4&0&0&1\\1&1&0&1&2\end{pmatrix}\). Beobachtung: <b>Spalte 3</b> hat nur einen Eintrag \(\neq0\), nämlich \(b_{33}=1\).</p>
+         <div class="step">Entwicklung nach Spalte 3: nur der Term \(j{=}3\) überlebt,<br>\(\det B=(-1)^{3+3}\cdot1\cdot\det\underbrace{\begin{pmatrix}4&3&2&1\\1&0&0&1\\0&4&0&1\\1&1&1&2\end{pmatrix}}_{4\times4}.\)</div>
+         <div class="step">Diese \(4\times4\) weiter nach <b>Zeile 2</b> \((1,0,0,1)\) entwickeln — nur zwei Terme, es bleiben zwei \(3\times3\)-Determinanten (mit Sarrus).</div>
+         <p>So bricht man die Determinante Stück für Stück herunter, immer entlang der nullenreichsten Linie.</p>` },
+
+     { t:"Zeilen-/Spaltenumformungen + Dreiecksform", k:"Gauß",
+       def:String.raw`Bringe \(A\) durch Zeilenumformungen auf obere Dreiecksform \(R\); dann \[\det A=\pm\,r_{11}r_{22}\cdots r_{nn}.\] Wirkung der Umformungen: <b>Zeile \(+\lambda\cdot\)Zeile:</b> \(\det\) unverändert; <b>Zeilentausch:</b> \(\det\to-\det\); <b>Zeile \(\cdot\,c\):</b> \(\det\to c\cdot\det\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> mit dem Gauß-Verfahren Nullen unter der Diagonale erzeugen. Bei einer Dreiecksmatrix ist die Determinante einfach das <b>Produkt der Diagonale</b>.</span>
+         <span class="idea"><b>Bausteine:</b> drei Umformungstypen mit bekannter Wirkung — „Zeile plus Vielfaches einer anderen" ändert nichts, ein Zeilentausch dreht das Vorzeichen, das Multiplizieren einer Zeile zieht den Faktor heraus.</span>
+         <span class="idea"><b>Warum praktisch:</b> für große oder buchstabenbehaftete Matrizen (\(n\ge4\)) meist der einzige gangbare Weg.</span>`,
+       bsp:String.raw`<p>\(C=\begin{pmatrix}1&2&4&-2\\-1&3&1&5\\2&-1&2&7\\2&-6&-2&-1\end{pmatrix}\) (Blatt 14 V1c). Spalte 1 unter der \(1\) ausräumen:</p>
+         <div class="step">\(Z_2{+}Z_1,\ Z_3{-}2Z_1,\ Z_4{-}2Z_1\) (alles vom Typ „Zeile \(+\) Vielfaches" \(\Rightarrow\) \(\det\) unverändert):<br>\(\begin{pmatrix}1&2&4&-2\\0&5&5&3\\0&-5&-6&11\\0&-10&-10&3\end{pmatrix}.\)</div>
+         <div class="step">Spalte 2 ausräumen: \(Z_3{+}Z_2,\ Z_4{+}2Z_2\):<br>\(\begin{pmatrix}1&2&4&-2\\0&5&5&3\\0&0&-1&14\\0&0&0&9\end{pmatrix}.\)</div>
+         <div class="step">Dreiecksform \(\Rightarrow\det C=1\cdot5\cdot(-1)\cdot9=\boxed{-45}.\) Kein Tausch, keine Skalierung benutzt \(\Rightarrow\) kein Vorzeichen/Faktor.</div>` },
+   ]},
+   { h:"Rechenregeln & Anwendungen", cards:[
+     { t:"Die wichtigsten Rechenregeln",
+       def:String.raw`<table class="reftable">
+         <tr><td class="lhs">\(\det(AB)=\det A\cdot\det B\)</td><td class="cond">Produktsatz</td></tr>
+         <tr><td class="lhs">\(\det(A^{\mathsf T})=\det A\)</td><td class="cond">Transponierte</td></tr>
+         <tr><td class="lhs">\(\det(\lambda A)=\lambda^{n}\det A\)</td><td class="cond">\(A\in K^{n\times n}\)</td></tr>
+         <tr><td class="lhs">\(\det(A^{-1})=(\det A)^{-1}\)</td><td class="cond">falls invertierbar</td></tr>
+         <tr><td class="lhs">Dreiecksmatrix: \(\det=\prod a_{ii}\)</td><td class="cond">Diagonale</td></tr>
+         <tr><td class="lhs">\(\det(T^{-1}AT)=\det A\)</td><td class="cond">Ähnlichkeit</td></tr></table>`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> die Determinante verträgt sich mit der <b>Multiplikation</b> von Matrizen, aber <u>nicht</u> mit der Addition (\(\det(A+B)\neq\det A+\det B\)!).</span>
+         <span class="idea"><b>Bausteine:</b> der Produktsatz \(\det(AB)=\det A\det B\) ist das Herzstück; daraus folgen die Regel für die Inverse und die Invarianz \(\det(T^{-1}AT)=\det A\).</span>
+         <span class="idea"><b>Warum praktisch:</b> weil \(\det\) sich bei Basiswechsel nicht ändert, ist sie eine echte Eigenschaft des Endomorphismus — und der Skalierungsfaktor \(\lambda^{n}\) rettet vor typischen Vorzeichen-/Faktor-Fehlern.</span>`,
+       bsp:String.raw`<p><b>Blockdreieck:</b> \(\det\begin{pmatrix}A&B\\0&D\end{pmatrix}=\det A\cdot\det D\). Konkret:</p>
+         \[\det\begin{pmatrix}2&5&9\\0&3&7\\0&0&4\end{pmatrix}=2\cdot3\cdot4=24.\]
+         <div class="step"><b>Skalierung:</b> für \(A\in\mathbb R^{3\times3}\) mit \(\det A=5\) ist \(\det(2A)=2^{3}\cdot5=40\) — der Faktor \(2\) geht mit <b>jeder</b> der \(3\) Zeilen ein, daher \(2^{n}\).</div>` },
+
+     { t:"Determinante & Invertierbarkeit",
+       def:String.raw`\[A\in K^{n\times n}\ \text{invertierbar}\iff\det A\neq0\iff\operatorname{rang}A=n.\]Über \(\mathbb Z\): \(A^{-1}\) ist <b>ganzzahlig</b> \(\iff\det A\in\{\pm1\}\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> die Determinante ist der schnelle Ja/Nein-Test dafür, ob eine Matrix invertierbar ist.</span>
+         <span class="idea"><b>Bausteine:</b> \(\det A\neq0\) heißt „voller Rang", also alle Spalten unabhängig, also invertierbar. Die Formel \(A^{-1}=\tfrac1{\det A}\operatorname{adj}(A)\) zeigt: der Nenner ist \(\det A\).</span>
+         <span class="idea"><b>Warum praktisch:</b> man muss nicht erst invertieren, um Invertierbarkeit zu prüfen. Über \(\mathbb Z\) bleibt die Inverse nur bei \(\det A=\pm1\) ganzzahlig — ein Ergebnis, das man dem Gauß-Verfahren kaum ansieht.</span>`,
+       bsp:String.raw`<p>\(B_n(x)\): auf der Diagonale \(x\), sonst überall \(1\) (Blatt 14 H2).</p>
+         <div class="step">Trick: ziehe Zeile 1 von jeder anderen Zeile ab \(\Rightarrow\) unterhalb der ersten Zeile entstehen Differenzen \(x-1\); geschickt weiterrechnen liefert<br>\(\det B_n(x)=(x-1)^{\,n-1}\,(x+n-1).\)</div>
+         <div class="step">Invertierbar über \(\mathbb R\) \(\iff x\neq1\) und \(x\neq1-n\) (sonst wird ein Faktor \(0\)).</div>
+         <div class="step">Ganzzahlig invertierbar nur, wenn \((x-1)^{n-1}(x+n-1)=\pm1\).</div>` },
+
+     { t:"Cramersche Regel", k:"LGS lösen",
+       def:String.raw`Für \(Ax=b\) mit \(\det A\neq0\):\[x_i=\frac{\det A_i}{\det A},\]\(A_i\) = \(A\) mit \(i\)-ter Spalte durch \(b\) ersetzt.`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> jede Unbekannte \(x_i\) einzeln als Bruch zweier Determinanten hinschreiben — ganz ohne Gauß.</span>
+         <span class="idea"><b>Bausteine:</b> im Zähler steht \(\det A\), bei dem die \(i\)-te Spalte durch die rechte Seite \(b\) ersetzt wurde; im Nenner immer \(\det A\).</span>
+         <span class="idea"><b>Warum praktisch:</b> zum reinen Rechnen meist zu aufwändig (\(n{+}1\) Determinanten), aber es zeigt die <b>Struktur</b> der Lösung: bei ganzzahligem LGS können im gekürzten Ergebnis nur Teiler von \(\det A\) im Nenner stehen.</span>`,
+       bsp:String.raw`<p>\(x_1{+}x_2{+}x_3=1,\ -2x_1{+}x_2=2,\ -4x_1{+}x_3=-3\) (Blatt 14 H1), also \(A=\begin{pmatrix}1&1&1\\-2&1&0\\-4&0&1\end{pmatrix}\), \(b=\begin{pmatrix}1\\2\\-3\end{pmatrix}\).</p>
+         <div class="step">\(\det A=7\) (z.B. mit Sarrus).</div>
+         <div class="step">Spalte 1 durch \(b\): \(\det A_1=\det\begin{pmatrix}1&1&1\\2&1&0\\-3&0&1\end{pmatrix}=2\). Ebenso \(\det A_2=18\), \(\det A_3=-13\).</div>
+         <div class="step">\(x=\bigl(\tfrac27,\ \tfrac{18}7,\ -\tfrac{13}7\bigr).\) Probe (Gl. 1): \(\tfrac{2+18-13}{7}=\tfrac77=1\) ✓.</div>` },
+   ]}
+  ]},
+
+/* ==================== 2) EIGENWERTE & DIAGONALISIERUNG ==================== */
+{ key:"eigenwerte", title:"Eigenwerte & Diagonalisierung", icon:"◈", g:1,
+  tag:"charakteristisches Polynom, Eigenräume, D = T⁻¹AT",
+  lead:String.raw`Ein <b>Eigenvektor</b> ist eine Richtung, die \(A\) nur streckt (nicht dreht): \(Av=\lambda v\). Diagonalisieren heißt, eine Basis aus solchen Richtungen zu finden — in ihr wird \(A\) zur einfachen Diagonalmatrix. Fahrplan: charakteristisches Polynom \(\to\) Eigenwerte \(\to\) Eigenräume \(\to\) diagonalisierbar?`,
+  blocks:[
+   { h:"Grundbegriffe", cards:[
+     { t:"Charakteristisches Polynom", k:"ChaPo",
+       def:String.raw`\[\chi_A(\lambda)=\det(A-\lambda I)\quad(\deg=n).\]Nullstellen \(=\) Eigenwerte. Es gilt \(\chi_A(\lambda)=(-1)^n\lambda^n+\dots\); Nebeninfos: \(\operatorname{tr}A\) steckt im \(\lambda^{n-1}\)-Term, \(\det A=\chi_A(0)\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> \(\lambda\) ist genau dann Eigenwert, wenn \(A-\lambda I\) <b>nicht</b> invertierbar ist — und das misst die Determinante.</span>
+         <span class="idea"><b>Bausteine:</b> man setzt \(\lambda\) als Unbekannte in \(\det(A-\lambda I)\) ein und erhält ein Polynom vom Grad \(n\); seine Nullstellen sind die Eigenwerte.</span>
+         <span class="idea"><b>Warum praktisch:</b> reduziert die Suche nach Eigenwerten auf „Nullstellen eines Polynoms". <b>Tipp:</b> viele Nullen (z.B. Dreiecksgestalt) machen \(\chi_A\) fast ablesbar — bei Dreiecksform ist \(\chi_A=\prod(a_{ii}-\lambda)\).</span>`,
+       bsp:String.raw`<p>\(A=\begin{pmatrix}1&2\\2&1\end{pmatrix}\):</p>
+         <div class="step">\(A-\lambda I=\begin{pmatrix}1-\lambda&2\\2&1-\lambda\end{pmatrix}\).</div>
+         <div class="step">\(\chi_A(\lambda)=(1-\lambda)^2-2\cdot2=\lambda^2-2\lambda-3=(\lambda-3)(\lambda+1).\)</div>
+         <div class="step">Spektrum \(\sigma(A)=\{3,-1\}\). Kontrolle: \(\operatorname{tr}A=1+1=2=3+(-1)\) ✓ und \(\det A=1-4=-3=3\cdot(-1)\) ✓.</div>` },
+
+     { t:"Eigenraum", k:"Eig(A,λ)",
+       def:String.raw`\[\operatorname{Eig}(A,\lambda)=\operatorname{Ker}(A-\lambda I)=\{v:\ Av=\lambda v\}.\]<b>geometrische Vielfachheit</b> \(=\dim\operatorname{Eig}(A,\lambda)\); <b>algebraische Vielfachheit</b> \(=\) Nullstellenordnung in \(\chi_A\). Stets \(1\le\) geom \(\le\) alg.`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> zu jedem Eigenwert \(\lambda\) sammelt man <b>alle</b> zugehörigen Eigenvektoren ein — das ist ein Untervektorraum.</span>
+         <span class="idea"><b>Bausteine:</b> \(\operatorname{Eig}(A,\lambda)\) ist die Lösungsmenge des homogenen LGS \((A-\lambda I)v=0\); eine Basis findet man mit Gauß.</span>
+         <span class="idea"><b>Warum praktisch:</b> die Dimension (geometrische Vielfachheit) sagt, wie viele unabhängige Eigenvektoren es gibt — genau das entscheidet später über Diagonalisierbarkeit.</span>`,
+       bsp:String.raw`<p>Für \(A=\begin{pmatrix}1&2\\2&1\end{pmatrix}\):</p>
+         <div class="step">\(\lambda=3\): \(A-3I=\begin{pmatrix}-2&2\\2&-2\end{pmatrix}\to\) Zeile \((1,-1)\), also \(v_1=v_2\Rightarrow\operatorname{Eig}(A,3)=\langle\binom{1}{1}\rangle.\)</div>
+         <div class="step">\(\lambda=-1\): \(A+I=\begin{pmatrix}2&2\\2&2\end{pmatrix}\to v_1=-v_2\Rightarrow\operatorname{Eig}(A,-1)=\langle\binom{1}{-1}\rangle.\)</div>
+         <p>Beide Eigenräume sind \(1\)-dimensional; zusammen ergeben sie eine Basis des \(\mathbb R^2\).</p>` },
+   ]},
+   { h:"Diagonalisieren", cards:[
+     { t:"Diagonalisierbarkeits-Kriterien",
+       def:String.raw`\(A\in K^{n\times n}\) diagonalisierbar \(\iff\) eine der äquivalenten Bedingungen:
+         <br>• \(\chi_A\) zerfällt über \(K\) <b>und</b> für jeden EW gilt geom \(=\) alg;
+         <br>• Summe der geom. Vielfachheiten \(=n\) (Eigenbasis existiert);
+         <br>• \(\mu_A\) zerfällt in <b>einfache</b> (paarw. verschiedene) Linearfaktoren.`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> diagonalisierbar heißt „es gibt genug Eigenvektoren, um eine ganze Basis zu bilden".</span>
+         <span class="idea"><b>Bausteine:</b> zwei Hürden — (1) zerfällt \(\chi_A\) überhaupt über \(K\)? (über \(\mathbb C\) immer, über \(\mathbb R\) nicht); (2) hat jeder Eigenwert so viele Eigenvektoren wie seine Vielfachheit verlangt (geom \(=\) alg)?</span>
+         <span class="idea"><b>Warum praktisch:</b> bei lauter <b>verschiedenen</b> Eigenwerten ist (2) automatisch erfüllt — da muss man gar nichts weiter prüfen.</span>`,
+       bsp:String.raw`<p><b>Nicht</b> diagonalisierbar: \(\begin{pmatrix}2&1\\0&2\end{pmatrix}\), \(\chi=(\lambda-2)^2\) (alg. Vielfachheit \(2\)).</p>
+         <div class="step">\(\operatorname{Eig}(A,2)=\operatorname{Ker}\begin{pmatrix}0&1\\0&0\end{pmatrix}=\langle e_1\rangle\), geom \(=1<2=\)alg \(\Rightarrow\) zu wenige Eigenvektoren.</div>
+         <div class="step"><b>Diagonalisierbar:</b> \(\begin{pmatrix}1&2\\2&1\end{pmatrix}\) hat zwei <b>verschiedene</b> Eigenwerte \(3,-1\) \(\Rightarrow\) automatisch ok.</div>` },
+
+     { t:"Verfahren: D = T⁻¹AT", k:"Eigenbasis",
+       def:String.raw`Eigenvektoren \(v_1,\dots,v_n\) als <b>Spalten</b> von \(T\), zugehörige EW als Diagonale von \(D\):\[T=(v_1\mid\cdots\mid v_n),\quad D=\operatorname{diag}(\lambda_1,\dots,\lambda_n),\quad D=T^{-1}AT.\]`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> wechselt man in die Basis der Eigenvektoren, wirkt \(A\) auf jeder Achse nur als Streckung — die Matrix wird diagonal.</span>
+         <span class="idea"><b>Bausteine:</b> \(T\) enthält die Eigenvektoren spaltenweise, \(D\) die Eigenwerte in <b>derselben Reihenfolge</b> (Spalte \(j\) gehört zu Diagonaleintrag \(j\)).</span>
+         <span class="idea"><b>Warum praktisch:</b> in Diagonalform sind Potenzen, \(\exp\) usw. trivial. <b>Probe ohne \(T^{-1}\):</b> \(AT=TD\) prüfen — spart das Invertieren.</span>`,
+       bsp:String.raw`<p>\(A=\begin{pmatrix}1&2\\2&1\end{pmatrix}\), Eigenvektoren \(\binom11\) (zu \(3\)) und \(\binom1{-1}\) (zu \(-1\)):</p>
+         <div class="step">\(T=\begin{pmatrix}1&1\\1&-1\end{pmatrix},\quad D=\begin{pmatrix}3&0\\0&-1\end{pmatrix}.\)</div>
+         <div class="step">Probe \(AT=\begin{pmatrix}1&2\\2&1\end{pmatrix}\begin{pmatrix}1&1\\1&-1\end{pmatrix}=\begin{pmatrix}3&-1\\3&1\end{pmatrix}\);</div>
+         <div class="step">\(TD=\begin{pmatrix}1&1\\1&-1\end{pmatrix}\begin{pmatrix}3&0\\0&-1\end{pmatrix}=\begin{pmatrix}3&-1\\3&1\end{pmatrix}\) — gleich ✓.</div>` },
+   ]}
+  ]},
+
+/* ================= 3) MINIMALPOLYNOM & CAYLEY–HAMILTON ================= */
+{ key:"minimalpolynom", title:"Minimalpolynom & Cayley–Hamilton", icon:"µ", g:1,
+  tag:"µ_A, lokales/globales MiPo, χ_A(A)=0, Inverse als Polynom",
+  lead:String.raw`Setzt man eine Matrix in ein Polynom ein, kann \(0\) herauskommen. Das <b>kleinste</b> solche Polynom ist das Minimalpolynom \(\mu_A\). Cayley–Hamilton sagt: das charakteristische Polynom ist immer so eines (\(\chi_A(A)=0\)). Zusammen liefern sie Diagonalisierbarkeits-Kriterien und sogar die Inverse.`,
+  blocks:[
+   { h:"Minimalpolynom", cards:[
+     { t:"Minimalpolynom", k:"µ_A",
+       def:String.raw`\(\mu_A\) = normiertes Polynom <b>kleinsten Grades</b> mit \(\mu_A(A)=0\). Es gilt:\[\mu_A\mid\chi_A,\qquad \mu_A\ \text{und}\ \chi_A\ \text{haben dieselben Nullstellen (Eigenwerte).}\]`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> das „einfachste" Polynom, das die Matrix zu \(0\) macht — eine kompakte Kennzahl für ihr Verhalten.</span>
+         <span class="idea"><b>Bausteine:</b> \(\mu_A\) teilt \(\chi_A\) und enthält jeden Eigenwert-Faktor \((X-\lambda)\) mindestens einmal, aber evtl. mit <b>kleinerer</b> Potenz. Diese Potenz \(=\) größte Jordan-Blockgröße zu \(\lambda\).</span>
+         <span class="idea"><b>Warum praktisch:</b> am \(\mu_A\) liest man sofort ab, ob \(A\) diagonalisierbar ist (nämlich genau dann, wenn nur einfache Faktoren auftreten).</span>`,
+       bsp:String.raw`<p>\(A=\begin{pmatrix}2&1&0\\0&2&0\\0&0&2\end{pmatrix}\), \(\chi_A=(X-2)^3\). Welche Potenz von \((X-2)\) braucht \(\mu_A\)?</p>
+         <div class="step">\((A-2I)=\begin{pmatrix}0&1&0\\0&0&0\\0&0&0\end{pmatrix}\neq0\) \(\Rightarrow\) Grad \(1\) reicht nicht.</div>
+         <div class="step">\((A-2I)^2=0\) \(\Rightarrow\mu_A=(X-2)^2\).</div>
+         <p>\(\mu_A\) hat einen <b>doppelten</b> Faktor \(\Rightarrow\) \(A\) ist <b>nicht</b> diagonalisierbar (größter Jordan-Block hat Größe 2).</p>` },
+
+     { t:"Lokales & globales Minimalpolynom",
+       def:String.raw`Lokal zu \(v\): \(\mu_A^{v}\) = kleinstes normiertes \(p\) mit \(p(A)\,v=0\). Global: \[\mu_A=\operatorname{kgV}_{v}\ \mu_A^{v}=\mu_A^{v}\ \text{für ein generisches } v.\] Für einen Eigenvektor \(v\) zum EW \(\lambda\): \(\mu_A^{v}=X-\lambda\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> statt die ganze Matrix zu betrachten, schaut man, welches Polynom einen <b>einzelnen Vektor</b> \(v\) zu \(0\) macht.</span>
+         <span class="idea"><b>Bausteine:</b> man wendet \(A\) wiederholt auf \(v\) an — \(v,Av,A^2v,\dots\) — bis diese Vektoren linear abhängig werden; die erste Abhängigkeit liefert \(\mu_A^{v}\). Das globale \(\mu_A\) ist das kgV aller lokalen.</span>
+         <span class="idea"><b>Warum praktisch:</b> so findet man Eigenwerte <b>ohne</b> Determinante (MiPo-Methode) — oft schneller, gerade bei strukturierten Matrizen.</span>`,
+       bsp:String.raw`<p>Begleitmatrix \(C(Q)\) zu \(Q(X)=X^n+\dots+a_0\) (Blatt 15).</p>
+         <div class="step">Der Startvektor \(e_1\) wird durch \(C\) zu \(e_2\), dann \(e_3,\dots\) verschoben: \(Ce_1=e_2,\ C e_2=e_3,\dots\) — die Kette \(e_1,Ce_1,\dots\) bleibt bis Grad \(n\) unabhängig.</div>
+         <div class="step">Erst \(C^n e_1\) ist eine Kombination der vorigen \(\Rightarrow\mu_C^{e_1}=Q\), Grad \(n\).</div>
+         <p>Da Grad \(n\) schon der größtmögliche ist, gilt \(\mu_C=\chi_C=Q\): jedes Polynom \(Q\) tritt so als char. Polynom auf.</p>` },
+   ]},
+   { h:"Cayley–Hamilton", cards:[
+     { t:"Satz von Cayley–Hamilton",
+       def:String.raw`\[\chi_A(A)=0.\]Jede Matrix erfüllt ihr eigenes charakteristisches Polynom. Folge: \(\mu_A\mid\chi_A\), und jede Potenz \(A^{k}\ (k\ge n)\) ist Linearkombination von \(I,A,\dots,A^{n-1}\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> setzt man die Matrix in ihr eigenes charakteristisches Polynom ein, kommt die Nullmatrix heraus.</span>
+         <span class="idea"><b>Bausteine:</b> aus \(\chi_A(A)=0\) kann man \(A^n\) durch \(I,A,\dots,A^{n-1}\) ausdrücken — jede höhere Potenz „faltet" sich auf niedrige zurück.</span>
+         <span class="idea"><b>Warum praktisch:</b> spart Arbeit beim Potenzieren und liefert die Inverse als Polynom. <b>Achtung:</b> die Konstante \(c\) des Polynoms wird zu \(c\,I\) (nicht bloß \(c\)).</span>`,
+       bsp:String.raw`<p>\(A=\begin{pmatrix}1&2\\2&1\end{pmatrix}\), \(\chi_A=\lambda^2-2\lambda-3\).</p>
+         <div class="step">Cayley–Hamilton: \(A^2-2A-3I=0\), also \(A^2=2A+3I.\)</div>
+         <div class="step">\(2A+3I=\begin{pmatrix}2&4\\4&2\end{pmatrix}+\begin{pmatrix}3&0\\0&3\end{pmatrix}=\begin{pmatrix}5&4\\4&5\end{pmatrix}.\)</div>
+         <p>Kontrolle durch direktes Ausmultiplizieren: \(A^2=\begin{pmatrix}5&4\\4&5\end{pmatrix}\) ✓ — man hat \(A^2\) ohne Matrixmultiplikation bekommen.</p>` },
+
+     { t:"Inverse als Polynom in A", k:"via Cayley–Hamilton",
+       def:String.raw`Aus \(\chi_A(A)=A^n+\dots+a_1A+a_0I=0\) mit \(a_0=(-1)^n\det A\neq0\):\[A^{-1}=-\tfrac1{a_0}\bigl(A^{n-1}+\dots+a_1I\bigr).\]`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> weil \(A\) sein char. Polynom erfüllt, lässt sich \(A^{-1}\) als Polynom in \(A\) schreiben — ganz ohne Gauß-Inversion.</span>
+         <span class="idea"><b>Bausteine:</b> man löst \(\chi_A(A)=0\) nach dem konstanten Term auf, klammert ein \(A\) aus und liest \(A^{-1}\) ab.</span>
+         <span class="idea"><b>Warum praktisch:</b> elegant, wenn man \(\chi_A\) sowieso schon berechnet hat — man braucht nur noch \(A^2,A^3,\dots\).</span>`,
+       bsp:String.raw`<p>\(A=\begin{pmatrix}1&0&-1\\0&1&1\\2&1&0\end{pmatrix}\) (Blatt 16 V3), \(\chi_A(\lambda)=\lambda^3-2\lambda^2+2\lambda-1\).</p>
+         <div class="step">Cayley–Hamilton: \(A^3-2A^2+2A-I=0\Rightarrow A(A^2-2A+2I)=I\), also \(A^{-1}=A^2-2A+2I.\)</div>
+         <div class="step">\(A^2=\begin{pmatrix}-1&-1&-1\\2&2&1\\2&1&-1\end{pmatrix}\).</div>
+         <div class="step">\(A^{-1}=A^2-2A+2I=\begin{pmatrix}-1&-1&1\\2&2&-1\\-2&-1&1\end{pmatrix}.\) Probe \(AA^{-1}=I\) ✓.</div>` },
+   ]}
+  ]},
+
+/* ========================= 4) JORDAN-NORMALFORM ========================= */
+{ key:"jordan", title:"Jordan-Normalform", icon:"⬓", g:1,
+  tag:"Hauptvektorketten, Hauptraum-Sudoku, Blockgrößen ablesen",
+  lead:String.raw`Nicht jede Matrix ist diagonalisierbar. Die Jordan-Normalform ist der beste Ersatz: eine „fast-diagonale" Form aus Blöcken \(J_\ell(\lambda)\) (Eigenwert auf der Diagonale, \(1\)en direkt darüber). Das Standardverfahren („Hauptraum-Sudoku") liefert die Blockgrößen und eine passende Basis.`,
+  blocks:[
+   { h:"Bausteine", cards:[
+     { t:"Jordan-Block & Hauptraum",
+       def:String.raw`\[J_\ell(\lambda)=\begin{pmatrix}\lambda&1&&\\&\lambda&\ddots&\\&&\ddots&1\\&&&\lambda\end{pmatrix}\in K^{\ell\times\ell}.\]Hauptraum \(\operatorname{Hau}(f,\lambda)=\operatorname{Ker}(f-\lambda\,\mathrm{id})^{r}\) mit \(r=\) alg. Vielfachheit; \(V=\bigoplus_i\operatorname{Hau}(f,\lambda_i)\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> wo Eigenvektoren fehlen, füllt man mit <b>Hauptvektoren</b> auf — Vektoren, die erst nach mehrfacher Anwendung von \(A-\lambda I\) verschwinden.</span>
+         <span class="idea"><b>Bausteine:</b> ein Jordan-Block \(=\) eine <b>Kette</b> \(v_1\leftarrow v_2\leftarrow\cdots\), verbunden durch die \(1\)en. Der ganze Raum zerfällt in Haupträume (einer je Eigenwert), jeder Hauptraum weiter in Ketten \(=\) Blöcke.</span>
+         <span class="idea"><b>Warum praktisch:</b> in Jordan-Form werden Potenzen, \(\exp\) und Differentialgleichungen berechenbar, auch ohne Diagonalisierbarkeit.</span>`,
+       bsp:String.raw`<p>\(J_3(2)=\begin{pmatrix}2&1&0\\0&2&1\\0&0&2\end{pmatrix}\) ist ein einziger Block.</p>
+         <div class="step">Die Kette: \((A-2I)v_3=v_2,\quad(A-2I)v_2=v_1,\quad(A-2I)v_1=0.\)</div>
+         <p>\(v_1\) ist ein echter Eigenvektor (verschwindet sofort), \(v_2,v_3\) sind Hauptvektoren (verschwinden erst nach 2 bzw. 3 Anwendungen).</p>` },
+
+     { t:"Blockstruktur aus Kern-Dimensionen ablesen", k:"Sudoku",
+       def:String.raw`Setze \(k_i=\dim\operatorname{Ker}(A-\lambda I)^{i}\). Dann:
+         <br>• Anzahl Blöcke zu \(\lambda\) \(=k_1\) (geom. Vielfachheit);
+         <br>• Anzahl Blöcke der Größe \(\ge i\) \(=k_i-k_{i-1}\);
+         <br>• Young-Diagramm: Zeile \(i\) hat \(k_i-k_{i-1}\) Kästchen; Spaltenhöhen \(=\) Blockgrößen.`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> die Blockgrößen muss man nicht raten — sie stecken vollständig in den Dimensionen der Kerne von \((A-\lambda I)^i\).</span>
+         <span class="idea"><b>Bausteine:</b> man berechnet \(k_1,k_2,\dots\) bis \(k_s=r\) (alg. Vielfachheit). Die <b>Differenzen</b> \(k_i-k_{i-1}\) füllen ein Young-Diagramm zeilenweise; die Spaltenhöhen sind die Blockgrößen.</span>
+         <span class="idea"><b>Warum praktisch:</b> ein rein mechanisches Rezept (Kerne bestimmen \(=\) Gauß) statt Herumprobieren. Kontrolle: keine Zeile länger als die darunter.</span>`,
+       bsp:String.raw`<p>\(A=\begin{pmatrix}2&1&-1\\0&2&1\\0&0&2\end{pmatrix}\) (EW 2, alg. Vielfachheit \(r=3\)).</p>
+         <div class="step">\((A-2I)=\begin{pmatrix}0&1&-1\\0&0&1\\0&0&0\end{pmatrix}\): Rang \(2\Rightarrow k_1=3-2=1\).</div>
+         <div class="step">\((A-2I)^2=\begin{pmatrix}0&0&1\\0&0&0\\0&0&0\end{pmatrix}\Rightarrow k_2=2\); \((A-2I)^3=0\Rightarrow k_3=3\).</div>
+         <div class="step">Differenzen \(1,1,1\) \(\Rightarrow\) eine Spalte der Höhe \(3\) \(\Rightarrow\) genau <b>ein</b> Block \(J_3(2)\).</div>` },
+   ]},
+   { h:"Verfahren & Kontrolle", cards:[
+     { t:"Standardverfahren zur Jordan-Basis",
+       def:String.raw`① \(\chi_A\) bestimmen &amp; in Linearfaktoren zerlegen. ② Pro EW \(\lambda\): \(g=A-\lambda I\), Kern-Dimensionen \(k_i\) bis \(k_s=r\). ③ Young-Diagramm \(\to\) Blockgrößen (\(=\) Jordan-Form). ④ Startvektoren oben wählen, mit \(g\) „runterrieseln" lassen. ⑤ Jordan-Basis: Spalten von links nach rechts, jede von unten nach oben.`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> ein Kochrezept, das aus Routineaufgaben zusammengesetzt ist — Matrix potenzieren, Kern bestimmen, Basis ergänzen.</span>
+         <span class="idea"><b>Bausteine:</b> nur die Jordan-<b>Form</b> gesucht? Nach Schritt ③ fertig. Für die <b>Basis</b> wählt man in der obersten Schicht Startvektoren (Komplement zum schon Erreichten) und lässt sie durch \(g\) nach unten „rieseln".</span>
+         <span class="idea"><b>Warum praktisch:</b> zerlegt ein einschüchterndes Problem in lauter kleine, sichere Schritte.</span>`,
+       bsp:String.raw`<p>Für \(A=\begin{pmatrix}2&1&-1\\0&2&1\\0&0&2\end{pmatrix}\) (ein \(J_3(2)\)): Startvektor \(v_3=e_3\) (denn \((A-2I)^2e_3\neq0\)).</p>
+         <div class="step">\(v_2=(A-2I)e_3=\begin{pmatrix}-1\\1\\0\end{pmatrix}\).</div>
+         <div class="step">\(v_1=(A-2I)v_2=\begin{pmatrix}1\\0\\0\end{pmatrix}\) (ist Eigenvektor).</div>
+         <div class="step">Jordan-Basis \((v_1,v_2,v_3)\Rightarrow T=\begin{pmatrix}1&-1&0\\0&1&0\\0&0&1\end{pmatrix},\ T^{-1}AT=J_3(2).\)</div>` },
+
+     { t:"Plausibilitäts-Checks", k:"Rechenfehler früh finden",
+       def:String.raw`Feste Zusammenhänge zum Gegenchecken:
+         <br>• \(\sum\) Blockgrößen zu \(\lambda\) \(=\) alg. Vielfachheit in \(\chi_A\);
+         <br>• \# Blöcke zu \(\lambda\) \(=\) geom. Vielfachheit \(=\dim\operatorname{Ker}(A-\lambda I)\);
+         <br>• größte Blockgröße zu \(\lambda\) \(=\) Exponent in \(\mu_A\);
+         <br>• \(\det A=\prod\lambda_i\), \(\operatorname{tr}A=\sum\lambda_i\) (mit Vielfachheit).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> \(\chi_A\) und \(\mu_A\) schränken die möglichen Jordan-Formen stark ein — oft bleiben nur wenige Kandidaten.</span>
+         <span class="idea"><b>Bausteine:</b> Spur \(=\) Summe der Eigenwerte, Determinante \(=\) Produkt, Zahl der Blöcke \(=\) geometrische Vielfachheit, größter Block \(=\) Exponent im Minimalpolynom.</span>
+         <span class="idea"><b>Warum praktisch:</b> gerade in Klausuren entlarven diese Checks Rechenfehler sofort — passen die Zahlen nicht zusammen, stimmt etwas nicht.</span>`,
+       bsp:String.raw`<p>\(\chi_A=(X-2)^6(X-3)^2\), \(\mu_A=(X-2)^3(X-3)\) (Blatt 17 H1). Welche Jordan-Formen sind möglich?</p>
+         <div class="step">Zu \(\lambda=2\): größter Block \(=3\) (aus \(\mu_A\)), Gesamtgröße \(=6\) (aus \(\chi_A\)). Partitionen von \(6\) mit größtem Teil \(3\): \(3{+}3\), \(3{+}2{+}1\), \(3{+}1{+}1{+}1\).</div>
+         <div class="step">Zu \(\lambda=3\): größter Block \(=1\), Gesamt \(=2\Rightarrow1{+}1\) (fest).</div>
+         <p>\(\Rightarrow\) genau <b>3</b> mögliche Jordan-Formen.</p>` },
+   ]}
+  ]},
+
+/* ============= 5) MATRIXPOTENZEN & MATRIX-EXPONENTIAL ============= */
+{ key:"matrixfunktionen", title:"Matrixpotenzen & Matrix-Exponential", icon:"Aⁿ", g:1,
+  tag:"J = D + N, Aⁿ per Binomischem Satz, exp(tA)",
+  lead:String.raw`Potenzen \(A^n\) oder die Exponentialfunktion \(\exp(tA)\) direkt auszurechnen ist mühsam. Der Trick: die Jordan-Zerlegung \(A=D+N\) in einen diagonalisierbaren Teil \(D\) und einen nilpotenten Teil \(N\) (mit \(N^\ell=0\)) — dann werden beide bequem.`,
+  blocks:[
+   { h:"Potenzen", cards:[
+     { t:"Jordan-Zerlegung A = D + N",
+       def:String.raw`Jede jordanisierbare Matrix: \[A=D+N,\quad D\ \text{diagonalisierbar},\ N\ \text{nilpotent},\ DN=ND.\]In Jordan-Basis: \(D=\operatorname{diag}(\lambda_i)\), \(N\) = die \(1\)en oberhalb der Diagonale (\(N^{\ell}=0\) für Blockgröße \(\le\ell\)).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> zerlege \(A\) in einen „einfachen" Teil \(D\) (Diagonale) und einen „harmlosen" Teil \(N\), der nach wenigen Potenzen verschwindet.</span>
+         <span class="idea"><b>Bausteine:</b> im Jordan-Block ist \(J_\ell(\lambda)=\lambda I+N\); \(N\) sind nur die \(1\)en über der Diagonale, und \(N^\ell=0\).</span>
+         <span class="idea"><b>Warum praktisch:</b> weil \(D\) und \(N\) <b>vertauschen</b> (\(DN=ND\)), darf man den binomischen Lehrsatz anwenden — und die Summe bricht wegen \(N^\ell=0\) früh ab.</span>`,
+       bsp:String.raw`<p>\(J=\begin{pmatrix}2&1&0\\0&2&1\\0&0&2\end{pmatrix}=2I+N\) mit \(N=\begin{pmatrix}0&1&0\\0&0&1\\0&0&0\end{pmatrix}\).</p>
+         <div class="step">\(N^2=\begin{pmatrix}0&0&1\\0&0&0\\0&0&0\end{pmatrix}\) (die \(1\) rückt eine Diagonale weiter nach oben).</div>
+         <div class="step">\(N^3=0\) — die Nilpotenz bricht nach 3 Schritten ab.</div>` },
+
+     { t:"Aⁿ per Binomischem Satz", k:"J = D+N",
+       def:String.raw`Da \(DN=ND\): \[A^{n}=(D+N)^{n}=\sum_{k=0}^{\ell-1}\binom{n}{k}D^{\,n-k}N^{k}\quad(N^{\ell}=0).\]Für einen Block \(J_\ell(\lambda)\): \(\bigl(J^{n}\bigr)_{ij}=\binom{n}{j-i}\lambda^{\,n-(j-i)}\) für \(j\ge i\), sonst \(0\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> \(A^n\) als endliche Summe über die Potenzen des nilpotenten Teils schreiben.</span>
+         <span class="idea"><b>Bausteine:</b> der binomische Satz \((D+N)^n\), abgeschnitten bei \(N^{\ell-1}\), weil höhere \(N\)-Potenzen \(0\) sind — also nur wenige Terme.</span>
+         <span class="idea"><b>Warum praktisch:</b> liefert eine <b>geschlossene Formel</b> für \(A^n\) (statt \(n\)-mal multiplizieren). Für allgemeines \(A\) erst jordanisieren, dann \(A^n=TJ^nT^{-1}\).</span>`,
+       bsp:String.raw`<p>Für \(J=2I+N\) (oben, \(N^3=0\), Blatt 17 V1a): nur drei Terme.</p>
+         <div class="step">\(J^{n}=2^{n}I+\binom{n}{1}2^{n-1}N+\binom{n}{2}2^{n-2}N^{2}.\)</div>
+         <div class="step">Eingesetzt: \(J^{n}=\begin{pmatrix}2^{n}&n\,2^{n-1}&\binom{n}{2}2^{n-2}\\0&2^{n}&n\,2^{n-1}\\0&0&2^{n}\end{pmatrix}.\)</div>
+         <p>Für die Begleitmatrix \(A=\begin{pmatrix}0&1&0\\0&0&1\\8&-12&6\end{pmatrix}\) (\(\chi=(X-2)^3\)) erst \(A=TJT^{-1}\), dann \(A^{n}=TJ^{n}T^{-1}\).</p>` },
+   ]},
+   { h:"Matrix-Exponential", cards:[
+     { t:"exp(tA) — Definition & Jordan-Block",
+       def:String.raw`\[\exp(tA)=\sum_{k\ge0}\frac{(tA)^{k}}{k!}.\]Für einen Block: \(\exp\!\bigl(tJ_\ell(\lambda)\bigr)=e^{\lambda t}\sum_{k=0}^{\ell-1}\dfrac{t^{k}}{k!}N^{k}\), also
+         \[\exp\!\bigl(tJ_3(\lambda)\bigr)=e^{\lambda t}\begin{pmatrix}1&t&\tfrac{t^2}{2}\\0&1&t\\0&0&1\end{pmatrix}.\]`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> dieselbe Reihe wie bei \(e^x=\sum x^k/k!\), nur mit einer Matrix statt einer Zahl.</span>
+         <span class="idea"><b>Bausteine:</b> man spaltet \(J=\lambda I+N\); dann ist \(\exp(tJ)=e^{\lambda t}\exp(tN)\), und \(\exp(tN)\) ist wegen \(N^\ell=0\) eine <b>endliche</b> Summe.</span>
+         <span class="idea"><b>Warum praktisch:</b> \(\exp(tA)\) ist die Lösung des Differentialgleichungssystems \(u'=Au\) — deshalb rechnet man es überhaupt aus.</span>`,
+       bsp:String.raw`<p>\(J_3(2)\), mit \(N,N^2\) von oben:</p>
+         <div class="step">\(\exp(tN)=I+tN+\tfrac{t^2}{2}N^2\) (die Reihe endet hier, da \(N^3=0\)).</div>
+         <div class="step">\(\exp\!\bigl(tJ_3(2)\bigr)=e^{2t}\begin{pmatrix}1&t&t^2/2\\0&1&t\\0&0&1\end{pmatrix}.\)</div>` },
+
+     { t:"exp(TBT⁻¹) = T exp(B) T⁻¹", k:"Basiswechsel",
+       def:String.raw`\[\exp\!\bigl(TBT^{-1}\bigr)=T\,\exp(B)\,T^{-1}.\]Damit: \(A=TJT^{-1}\Rightarrow\exp(tA)=T\,\exp(tJ)\,T^{-1}\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> \(\exp\) verträgt sich mit Basiswechsel — man darf erst in die Jordan-Basis wechseln, dort \(\exp\) bilden und zurück.</span>
+         <span class="idea"><b>Bausteine:</b> \((TBT^{-1})^k=TB^kT^{-1}\), also lassen sich \(T\) und \(T^{-1}\) aus der ganzen Reihe herausziehen.</span>
+         <span class="idea"><b>Warum praktisch:</b> so berechnet man \(\exp(tA)\) für <b>jede</b> Matrix: jordanisieren, \(\exp(tJ)\) hinschreiben, zurücktransformieren.</span>`,
+       bsp:String.raw`<p>\(A=\begin{pmatrix}2&0&6\\1&2&-1\\0&0&-1\end{pmatrix}\) (Blatt 18 H2).</p>
+         <div class="step">Jordanisieren: \(A=TJT^{-1}\) bestimmen.</div>
+         <div class="step">\(\exp(tJ)\) blockweise nach der Formel hinschreiben.</div>
+         <div class="step">\(\exp(tA)=T\,\exp(tJ)\,T^{-1}\); die Lösung von \(u'=Au,\ u(0)=u_0\) ist \(u(t)=\exp(tA)\,u_0\).</div>` },
+   ]}
+  ]},
+
+/* ============= 6) LINEARE DGL & REKURSIONEN ============= */
+{ key:"dgl", title:"Lineare DGL & Rekursionen", icon:"u′", g:2,
+  tag:"charakteristisches Polynom, Fundamentalsystem, Ansatz, u′=Au",
+  lead:String.raw`Lineare Differentialgleichungen mit konstanten Koeffizienten sind „auch nur Lineare Algebra": das charakteristische Polynom liefert alle Lösungen — genau wie bei linearen Rekursionen (Folgen). Ableitung \(\partial\) und Verschiebung \(s\) spielen dieselbe Rolle.`,
+  blocks:[
+   { h:"Homogene Gleichungen", cards:[
+     { t:"Fundamentalsystem aus dem charakteristischen Polynom",
+       def:String.raw`Zu \(P(\partial)u=0\) mit \(P(X)=X^{n}+\dots+a_0\): jede Nullstelle \(\lambda\) der Vielfachheit \(r\) liefert Lösungen \[e^{\lambda t},\ t\,e^{\lambda t},\ \dots,\ t^{\,r-1}e^{\lambda t}.\]Insgesamt \(n\) linear unabhängige Lösungen \(\Rightarrow\) Basis des Lösungsraums.`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> Ableiten wirkt auf \(e^{\lambda t}\) wie „mal \(\lambda\)" — deshalb steckt die ganze Gleichung in einem Polynom \(P\).</span>
+         <span class="idea"><b>Bausteine:</b> \(P\) in Linearfaktoren zerlegen; jede Nullstelle \(\lambda\) gibt \(e^{\lambda t}\), eine \(r\)-fache zusätzlich \(t\,e^{\lambda t},\dots,t^{r-1}e^{\lambda t}\) (wie ein Jordan-Block der Größe \(r\)).</span>
+         <span class="idea"><b>Warum praktisch:</b> die schwierige Differentialgleichung wird zu „Nullstellen suchen" — schematisch lösbar.</span>`,
+       bsp:String.raw`<p>\(u''+u'-2u=0\):</p>
+         <div class="step">\(P(X)=X^2+X-2=(X-1)(X+2)\), einfache Nullstellen \(1\) und \(-2\).</div>
+         <div class="step">Fundamentalsystem \(\{e^{t},\ e^{-2t}\}\).</div>
+         <p>Allgemeine Lösung \(u(t)=c_1e^{t}+c_2e^{-2t}\) mit freien Konstanten \(c_1,c_2\).</p>` },
+
+     { t:"Komplexe Nullstellen → reelles Fundamentalsystem",
+       def:String.raw`Ein Paar \(\lambda=\alpha\pm i\beta\) (Vielfachheit \(r\)) liefert die <b>reellen</b> Lösungen \[t^{k}e^{\alpha t}\cos(\beta t),\quad t^{k}e^{\alpha t}\sin(\beta t)\qquad(k=0,\dots,r-1).\]`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> komplexe Nullstellen ergeben Schwingungen; aus \(e^{(\alpha+i\beta)t}\) liest man Real- und Imaginärteil als zwei reelle Lösungen ab.</span>
+         <span class="idea"><b>Bausteine:</b> \(e^{(\alpha+i\beta)t}=e^{\alpha t}(\cos\beta t+i\sin\beta t)\) — der Realteil \(e^{\alpha t}\cos\beta t\) und der Imaginärteil \(e^{\alpha t}\sin\beta t\).</span>
+         <span class="idea"><b>Warum praktisch:</b> „lieber einmal komplex als zweimal reell" — komplex rechnen, am Ende \(\mathrm{Re}\)/\(\mathrm{Im}\) nehmen, spart Arbeit.</span>`,
+       bsp:String.raw`<p>\(u^{(4)}-4u'''+14u''-20u'+25u=0\) (Blatt 17 V2).</p>
+         <div class="step">\(P(1+2i)=0\), und \(1\pm2i\) sind je <b>doppelte</b> Nullstellen (\(\alpha=1,\ \beta=2,\ r=2\)).</div>
+         <div class="step">Reelles Fundamentalsystem: \(e^{t}\cos2t,\ e^{t}\sin2t,\ t\,e^{t}\cos2t,\ t\,e^{t}\sin2t.\)</div>` },
+   ]},
+   { h:"Systeme, Inhomogenität & Rekursionen", cards:[
+     { t:"System u′ = Au", k:"Hauptvektorketten",
+       def:String.raw`Allgemeine Lösung \(u(t)=\exp(tA)\,u_0\). Aus einer Hauptvektorkette \(v_1,\dots,v_\ell\) (Länge \(\ell\), EW \(\lambda\)) entstehen die Basislösungen \[x_j(t)=e^{\lambda t}\sum_{i=1}^{j}\frac{t^{\,j-i}}{(j-i)!}\,v_i\quad(j=1,\dots,\ell).\]`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> ein System gekoppelter DGL löst man über die Eigen-/Hauptvektoren von \(A\) — man muss \(\exp(tA)\) nicht explizit bilden.</span>
+         <span class="idea"><b>Bausteine:</b> der Eigenvektor \(v_1\) gibt \(e^{\lambda t}v_1\); jeder weitere Hauptvektor der Kette bringt einen zusätzlichen \(t\)-Term dazu (genau wie das Fundamentalsystem einer skalaren DGL).</span>
+         <span class="idea"><b>Warum praktisch:</b> man liest die Lösungen direkt aus der Jordan-Struktur ab.</span>`,
+       bsp:String.raw`<p>\(A=\begin{pmatrix}2&1&-1\\0&2&1\\0&0&2\end{pmatrix}\) (Blatt 18 V2): eine Kette \(v_1,v_2,v_3\) zum EW \(2\).</p>
+         <div class="step">\(x_1=e^{2t}v_1,\quad x_2=e^{2t}(t\,v_1+v_2),\quad x_3=e^{2t}\bigl(\tfrac{t^2}{2}v_1+t\,v_2+v_3\bigr).\)</div>
+         <div class="step">Allgemeine Lösung \(u=c_1x_1+c_2x_2+c_3x_3\); die \(c_i\) aus der Anfangsbedingung \(u(0)=v\).</div>` },
+
+     { t:"Ansatz für rechte Seite tˡ·e^{λt}", k:"Resonanz",
+       def:String.raw`Für \(P(\partial)u=t^{\ell}e^{\lambda t}\) mit \(\lambda\) als \(r\)-facher Nullstelle von \(P\) (\(r=0\), falls keine): Ansatz \[u_p=t^{\,r}\bigl(c_0+c_1t+\dots+c_\ell t^{\ell}\bigr)e^{\lambda t}.\]Koeffizienten \(c_i\) durch Einsetzen/Vergleich bestimmen.`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> man rät die <b>Form</b> der Lösung und passt nur noch die Zahlen an.</span>
+         <span class="idea"><b>Bausteine:</b> ein Polynom vom Grad \(\ell\) mal \(e^{\lambda t}\); der Extra-Faktor \(t^{r}\) („Resonanz-Korrektur") ist nötig, wenn \(\lambda\) schon Nullstelle der homogenen Gleichung ist — sonst kollidiert der Ansatz mit einer homogenen Lösung.</span>
+         <span class="idea"><b>Warum praktisch:</b> viel schneller als die allgemeine Integralformel — man muss nur ein kleines Gleichungssystem für die \(c_i\) lösen.</span>`,
+       bsp:String.raw`<p>\(u''+u'-2u=t\,e^{t}\) (Blatt 18 H1). Hier ist \(\lambda=1\) einfache Nullstelle (\(r=1\)), \(\ell=1\).</p>
+         <div class="step">Ansatz \(u_p=(at^2+bt)e^{t}\) (mit Faktor \(t^1\) wegen Resonanz).</div>
+         <div class="step">Einsetzen liefert \(u_p''+u_p'-2u_p=e^{t}\bigl(6a\,t+2a+3b\bigr)\stackrel{!}{=}t\,e^{t}.\)</div>
+         <div class="step">Koeffizientenvergleich: \(6a=1,\ 2a+3b=0\Rightarrow a=\tfrac16,\ b=-\tfrac19.\) Also \(u_p=\bigl(\tfrac16t^{2}-\tfrac19t\bigr)e^{t}.\)</div>` },
+
+     { t:"Rekursionen ↔ Differentialgleichungen",
+       def:String.raw`Lineare Rekursion \(f_{k}=c_{1}f_{k-1}+\dots+c_{m}f_{k-m}\) hat char. Polynom \(P\); jede Nullstelle \(\lambda\) (Vielfachheit \(r\)) liefert \[\lambda^{n},\ n\lambda^{n},\ \dots,\ n^{\,r-1}\lambda^{n}.\]Dieselbe Struktur wie DGL (Verschiebung \(s\) statt Ableitung \(\partial\)).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> Folgen mit Rekursion verhalten sich exakt wie Differentialgleichungen — nur diskret.</span>
+         <span class="idea"><b>Bausteine:</b> der Verschiebeoperator \((sf)(n)=f(n{+}1)\) spielt die Rolle der Ableitung \(\partial\); dieselbe Zerlegung des char. Polynoms, nur \(\lambda^n\) statt \(e^{\lambda t}\).</span>
+         <span class="idea"><b>Warum praktisch:</b> man bekommt eine <b>geschlossene Formel</b> für \(f_n\) (statt Schritt für Schritt hochzuzählen); die Anfangswerte legen die Konstanten fest.</span>`,
+       bsp:String.raw`<p>\(f_k=-2f_{k-1}+4f_{k-2}+8f_{k-3}\), \(f_0{=}2,f_1{=}2,f_2{=}0\) (Blatt 17 H2b).</p>
+         <div class="step">Char. Polynom \(P=X^3+2X^2-4X-8=(X-2)(X+2)^2\), Nullstellen \(2\) und \(-2\) (doppelt).</div>
+         <div class="step">Ansatz \(f_n=a\,2^{n}+(b+cn)(-2)^{n}\); die 3 Anfangswerte geben \(a=b=1,\ c=-1\).</div>
+         <div class="step">\(f_n=2^{n}+(1-n)(-2)^{n}\). Probe \(f_3=8+(-2)(-8)=24\) ✓.</div>` },
+   ]}
+  ]},
+
+/* ============= 7) SKALARPRODUKTE & BILINEARFORMEN ============= */
+{ key:"bilinearformen", title:"Skalarprodukte & Bilinearformen", icon:"⟨·|·⟩", g:3,
+  tag:"Gram-Matrix, quadratische Form, Radikal, Definitheit",
+  lead:String.raw`Ein Skalarprodukt gibt einem Vektorraum <b>Längen und Winkel</b>. Allgemeiner ist eine Bilinearform \(s(x,y)\) linear in beiden Argumenten; über eine Basis entspricht sie einer Matrix. Ihre „Definitheit" (Vorzeichen) liest man an den Eigenwerten ab.`,
+  blocks:[
+   { h:"Formen & Matrizen", cards:[
+     { t:"Skalarprodukt / hermitesche Form",
+       def:String.raw`Bilinearform \(s:V\times V\to K\) mit Gram-Matrix \(A=(s(b_i,b_j))\), also \(s(x,y)=x^{\mathsf T}A\,y\). Ein <b>Skalarprodukt</b> ist zusätzlich <b>symmetrisch/hermitesch</b> und <b>positiv definit</b> (\(s(x,x)>0\) für \(x\neq0\)). Hermitesch über \(\mathbb C\): \(s(x,y)=\overline{x}^{\mathsf T}A\,y\), \(A^{*}=A\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> ein Skalarprodukt ist die Zusatzstruktur, mit der „senkrecht" und „Länge" überhaupt Sinn ergeben.</span>
+         <span class="idea"><b>Bausteine:</b> eine Bilinearform ist durch ihre Werte auf einer Basis — die <b>Gram-Matrix</b> \(A\) — vollständig festgelegt; ein Skalarprodukt braucht zusätzlich Symmetrie und Positivität.</span>
+         <span class="idea"><b>Warum praktisch:</b> beim Basiswechsel \(x=Ty\) transformiert sich \(A\) per <b>Kongruenz</b> \(A\mapsto T^{\mathsf T}AT\) (nicht \(T^{-1}AT\) wie bei Endomorphismen!) — ein häufiger Fehler.</span>`,
+       bsp:String.raw`<p><b>Standardskalarprodukt</b> auf \(\mathbb R^{n}\): \(A=I\), also \(s(x,y)=\sum_i x_iy_i\).</p>
+         <div class="step">Auf \(\mathbb C^{2}\): \(s(x,y)=\overline{x_1}y_1+\overline{x_2}y_2\).</div>
+         <p>Die Konjugation sorgt dafür, dass \(s(x,x)=|x_1|^2+|x_2|^2\ge0\) reell und positiv ist — ohne sie könnte \(s(x,x)\) komplex werden.</p>` },
+
+     { t:"Quadratische Form ↔ symmetrische Matrix",
+       def:String.raw`Zu \(s\) gehört die quadratische Form \(q(x)=s(x,x)=x^{\mathsf T}A\,x\). In Charakteristik \(\neq2\) Rekonstruktion durch Polarisierung: \[s(x,y)=\tfrac12\bigl(q(x+y)-q(x)-q(y)\bigr).\]`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> setzt man in eine symmetrische Bilinearform beide Argumente gleich, erhält man eine quadratische Form \(q(x)\) — beide beschreiben dasselbe.</span>
+         <span class="idea"><b>Bausteine:</b> auf der Diagonale von \(A\) stehen die Koeffizienten von \(x_i^2\), auf den Nebenplätzen der <b>halbierte</b> Koeffizient von \(x_ix_j\); zurück kommt man per Polarisierung.</span>
+         <span class="idea"><b>Warum praktisch:</b> das funktioniert nur, solange man durch \(2\) teilen darf. Über \(\mathbb F_2\) bricht es zusammen (dort ist symmetrisch \(=\) alternierend) — Vorsicht in Charakteristik 2.</span>`,
+       bsp:String.raw`<p>\(q(x)=x_1x_2\) auf \(K^{2}\) (Blatt 19 V3).</p>
+         <div class="step">Symmetrische Matrix \(A=\begin{pmatrix}0&\tfrac12\\\tfrac12&0\end{pmatrix}\), denn \(x^{\mathsf T}Ax=\tfrac12x_1x_2+\tfrac12x_2x_1=x_1x_2\).</div>
+         <p>Über \(\mathbb F_2\) gibt es den Eintrag \(\tfrac12\) nicht \(\Rightarrow\) dort ist \(q\) <b>nicht</b> durch eine symmetrische Bilinearform darstellbar.</p>` },
+
+     { t:"Kern / Radikal & Regularität",
+       def:String.raw`\[V^{\perp}=\{v\in V:\ s(v,w)=0\ \forall w\}=\operatorname{Ker} A.\]\(s\) heißt <b>regulär</b> (nicht ausgeartet) \(\iff V^{\perp}=0\iff\det A\neq0\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> manche Vektoren stehen auf <b>allem</b> senkrecht — die Form „sieht" sie nicht. Sie bilden das Radikal \(V^{\perp}\).</span>
+         <span class="idea"><b>Bausteine:</b> \(V^{\perp}\) ist genau der Kern der Gram-Matrix \(A\); ist er \(0\), heißt die Form regulär (\(\det A\neq0\)).</span>
+         <span class="idea"><b>Warum praktisch:</b> bei regulären Formen kann man Vektoren mit Linearformen identifizieren — die Grundlage vieler Konstruktionen (Dualraum, adjungierte Abbildung).</span>`,
+       bsp:String.raw`<p>\(V=\mathbb R[x]_{\le4}\), \(s(f,g)=(fg)'(0)\) (Blatt 19 H3).</p>
+         <div class="step">Produktregel: \((fg)'(0)=f'(0)\,g(0)+f(0)\,g'(0)\).</div>
+         <div class="step">\(s(f,\cdot)=0\) für <b>alle</b> \(g\) \(\iff f(0)=0\) und \(f'(0)=0\).</div>
+         <p>\(\Rightarrow V^{\perp}=\{f:\ f(0)=f'(0)=0\}=\langle x^{2},x^{3},x^{4}\rangle\), \(\dim=3\). Die Form ist also ausgeartet.</p>` },
+   ]},
+   { h:"Definitheit", cards:[
+     { t:"Positiv definit / semidefinit / indefinit",
+       def:String.raw`Für symmetrisches reelles \(A\) mit Eigenwerten \(\lambda_i\):
+         <table class="reftable">
+         <tr><td class="lhs">alle \(\lambda_i>0\)</td><td class="cond">positiv definit</td></tr>
+         <tr><td class="lhs">alle \(\lambda_i\ge0\)</td><td class="cond">positiv semidefinit</td></tr>
+         <tr><td class="lhs">\(\lambda_i\) beider Vorzeichen</td><td class="cond">indefinit</td></tr></table>
+         <b>Hurwitz:</b> positiv definit \(\iff\) alle führenden Hauptminoren \(>0\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> „Definitheit" fragt, ob \(q(x)=x^{\mathsf T}Ax\) immer positiv, immer negativ oder gemischt ist.</span>
+         <span class="idea"><b>Bausteine:</b> entscheidend sind die Vorzeichen der Eigenwerte (die <b>Signatur</b>). Sie bleibt unter Kongruenz erhalten (Sylvesters Trägheitssatz).</span>
+         <span class="idea"><b>Warum praktisch:</b> positiv definit \(=\) echtes Skalarprodukt. Für kleine Matrizen genügt das Hurwitz-Kriterium (führende Minoren \(>0\)) — kein Eigenwerte-Ausrechnen nötig.</span>`,
+       bsp:String.raw`<p>\(A=\begin{pmatrix}2&1\\1&2\end{pmatrix}\):</p>
+         <div class="step">Eigenwerte \(3,1>0\Rightarrow\) positiv definit.</div>
+         <div class="step">Gegencheck Hurwitz: \(2>0\) und \(\det A=3>0\) ✓.</div>
+         <p>Dagegen \(\begin{pmatrix}1&0\\0&-1\end{pmatrix}\): Eigenwerte \(1,-1\Rightarrow\) indefinit (\(q(e_1)=1>0\), \(q(e_2)=-1<0\)).</p>` },
+   ]}
+  ]},
+
+/* ============= 8) ORTHOGONALISIERUNG & PROJEKTION ============= */
+{ key:"orthogonal", title:"Orthogonalisierung & Projektion", icon:"⊥", g:3,
+  tag:"Gram-Schmidt, symmetrischer Gauß (TᵀAT), Projektion",
+  lead:String.raw`Drei geometrische Kernverfahren: aus einer beliebigen Basis eine <b>rechtwinklige</b> machen (Gram-Schmidt), eine Bilinearform diagonalisieren (symmetrischer Gauß, \(T^{\mathsf T}AT=D\)) und einen Vektor <b>senkrecht</b> auf einen Unterraum projizieren.`,
+  blocks:[
+   { h:"Orthonormalbasis", cards:[
+     { t:"Gram-Schmidt-Verfahren",
+       def:String.raw`\[w_i=v_i-\sum_{j<i}\frac{\langle v_i,w_j\rangle}{\langle w_j,w_j\rangle}\,w_j,\qquad e_i=\frac{w_i}{\lVert w_i\rVert}.\]Liefert eine ONB von \(\langle v_1,\dots,v_k\rangle\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> aus schiefen Vektoren rechtwinklige machen — jeden neuen Vektor „geradebiegen", indem man seine Anteile in Richtung der schon fertigen abzieht.</span>
+         <span class="idea"><b>Bausteine:</b> von \(v_i\) die Projektionen auf alle vorigen \(w_j\) subtrahieren (\(\Rightarrow w_i\perp\) alle vorigen), dann auf Länge \(1\) normieren.</span>
+         <span class="idea"><b>Warum praktisch:</b> eine ONB macht Projektionen, Koordinaten und Spektralsatz trivial. <b>Sonderfall:</b> wird \(w_i=0\), war \(v_i\) linear abhängig \(\Rightarrow\) überspringen (nicht durch \(0\) teilen!).</span>`,
+       bsp:String.raw`<p>\(v_1=(1,1,0),\ v_2=(1,0,1)\) im \(\mathbb R^3\) (Standardskalarprodukt).</p>
+         <div class="step">\(w_1=v_1=(1,1,0)\), \(\ e_1=\tfrac1{\sqrt2}(1,1,0)\).</div>
+         <div class="step">\(\langle v_2,w_1\rangle=1\), \(\langle w_1,w_1\rangle=2\Rightarrow w_2=(1,0,1)-\tfrac12(1,1,0)=(\tfrac12,-\tfrac12,1)\).</div>
+         <div class="step">\(\lVert w_2\rVert=\sqrt{\tfrac14+\tfrac14+1}=\sqrt{\tfrac32}\Rightarrow e_2=\tfrac1{\sqrt6}(1,-1,2)\).</div>
+         <p>Kontrolle: \(\langle e_1,e_2\rangle=0\) und \(\lVert e_2\rVert=1\) ✓.</p>` },
+
+     { t:"Symmetrischer Gauß: TᵀAT = D", k:"Orthogonalbasis für s",
+       def:String.raw`Diagonalisiere eine symmetrische Bilinearform durch <b>gepaarte</b> Zeilen- und Spaltenoperationen: jede Zeilenoperation \(R_i{+}\lambda R_j\) sofort mit \(C_i{+}\lambda C_j\) spiegeln. Ergebnis \(D=T^{\mathsf T}AT\) diagonal; \(T\) = Produkt der Spaltenoperationen (auf \(I\) angewandt).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> eine Bilinearform „in Diagonalform bringen", also eine Basis finden, in der die gemischten Terme verschwinden.</span>
+         <span class="idea"><b>Bausteine:</b> normaler Gauß, aber jede Zeilenoperation wird sofort mit der <b>gleichen Spaltenoperation</b> gespiegelt — das hält die Matrix symmetrisch und realisiert die Kongruenz \(T^{\mathsf T}AT\).</span>
+         <span class="idea"><b>Warum praktisch:</b> die Diagonale zeigt direkt die Signatur (und damit Definitheit). Steht eine \(0\) auf dem Pivot, erst durch Tausch/Addition einen Pivot erzeugen.</span>`,
+       bsp:String.raw`<p>\(A=\begin{pmatrix}1&3&0\\3&-1&3\\0&3&1\end{pmatrix}\) (Blatt 19 V2).</p>
+         <div class="step">Pivot \(1\): \(R_2{-}3R_1\) und gespiegelt \(C_2{-}3C_1\Rightarrow\begin{pmatrix}1&0&0\\0&-10&3\\0&3&1\end{pmatrix}\).</div>
+         <div class="step">Pivot \(-10\): \(R_3{+}\tfrac3{10}R_2\) und \(C_3{+}\tfrac3{10}C_2\Rightarrow D=\operatorname{diag}\bigl(1,-10,\tfrac{19}{10}\bigr)\).</div>
+         <div class="step">Signatur \((+,-,+)\Rightarrow s\) <b>indefinit</b>. Die Spaltenoperationen auf \(I\) ergeben \(T=\begin{pmatrix}1&-3&-9/10\\0&1&3/10\\0&0&1\end{pmatrix}\) mit \(T^{\mathsf T}AT=D\).</div>` },
+   ]},
+   { h:"Projektion", cards:[
+     { t:"Orthogonale Projektion auf einen Unterraum",
+       def:String.raw`Auf \(U=\langle v_1,\dots,v_k\rangle\) mit \(V=(v_1\mid\cdots\mid v_k)\):\[p_U(x)=V\,(V^{\mathsf T}V)^{-1}V^{\mathsf T}x.\]Bei ONB \(e_i\) einfach \(p_U(x)=\sum_i\langle x,e_i\rangle\,e_i\). Der Rest \(x-p_U(x)\) steht \(\perp U\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> der „Schatten" von \(x\) auf den Unterraum \(U\) — der Punkt in \(U\), der \(x\) am nächsten liegt.</span>
+         <span class="idea"><b>Bausteine:</b> ohne ONB löst man die <b>Normalengleichung</b> \(V^{\mathsf T}V\,c=V^{\mathsf T}x\) für die Koeffizienten \(c\), dann \(p_U(x)=Vc\); mit ONB reicht \(\sum\langle x,e_i\rangle e_i\).</span>
+         <span class="idea"><b>Warum praktisch:</b> die definierende Eigenschaft ist, dass der Fehler \(x-p_U(x)\) auf allen \(v_i\) senkrecht steht — genau das nutzt man in der Ausgleichsrechnung.</span>`,
+       bsp:String.raw`<p>\(u=(4,-1,0)\) auf \(U=\langle v,w\rangle\), \(v=(1,0,1),\ w=(0,1,1)\) (Blatt 19 H1).</p>
+         <div class="step">\(V^{\mathsf T}V=\begin{pmatrix}\langle v,v\rangle&\langle v,w\rangle\\\langle w,v\rangle&\langle w,w\rangle\end{pmatrix}=\begin{pmatrix}2&1\\1&2\end{pmatrix}\), \(\ V^{\mathsf T}u=\binom{4}{-1}\).</div>
+         <div class="step">\(c=(V^{\mathsf T}V)^{-1}V^{\mathsf T}u=\tfrac13\begin{pmatrix}2&-1\\-1&2\end{pmatrix}\binom{4}{-1}=\binom{3}{-2}\).</div>
+         <div class="step">\(p=3v-2w=(3,-2,1)\). Rest \(u-p=(1,1,-1)\); Probe \(\langle u-p,v\rangle=0,\ \langle u-p,w\rangle=0\) ✓.</div>` },
+   ]}
+  ]},
+
+/* ============= 9) KLEINSTE QUADRATE & PSEUDOINVERSE ============= */
+{ key:"kleinstequadrate", title:"Kleinste Quadrate & Pseudoinverse", icon:"≈", g:3,
+  tag:"Normalengleichung, Ausgleich, SVD, Moore–Penrose A⁺",
+  lead:String.raw`Wenn \(Ax=b\) keine exakte Lösung hat (zu viele Gleichungen), sucht man das \(x\), das den Fehler \(\lVert Ax-b\rVert\) minimiert. Das führt auf die Normalengleichung; allgemein — auch bei Rangdefekt — liefert die Pseudoinverse die beste Lösung.`,
+  blocks:[
+   { h:"Methode der kleinsten Quadrate", cards:[
+     { t:"Normalengleichung",
+       def:String.raw`\(x^{*}\) minimiert \(\lVert Ax-b\rVert\) \(\iff\) \[A^{\mathsf T}A\,x^{*}=A^{\mathsf T}b.\]Ist \(A\) injektiv (Spalten unabh.), so \(x^{*}=(A^{\mathsf T}A)^{-1}A^{\mathsf T}b\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> gibt es keine exakte Lösung, nimmt man die <b>bestmögliche</b> — die mit kleinstem Abstand \(\lVert Ax-b\rVert\).</span>
+         <span class="idea"><b>Bausteine:</b> der Fehler wird minimal, wenn er <b>senkrecht</b> auf dem Spaltenraum von \(A\) steht: \(A^{\mathsf T}(Ax-b)=0\). Das ist dieselbe Idee wie die orthogonale Projektion (\(Ax^{*}\) ist der „Schatten" von \(b\)).</span>
+         <span class="idea"><b>Warum praktisch:</b> aus dem überbestimmten System \(Ax=b\) wird ein lösbares quadratisches System \(A^{\mathsf T}A\,x=A^{\mathsf T}b\).</span>`,
+       bsp:String.raw`<p>Warum ausgerechnet die Summe der <b>Quadrate</b>?</p>
+         <div class="step">Es ist die euklidische Metrik (Abstand im \(\mathbb R^n\)).</div>
+         <div class="step">Quadrate bestrafen große Fehler stärker — oft gewünscht.</div>
+         <div class="step">Und: dank Skalarprodukt lässt sich \(\sum(\dots)^2\) besonders leicht minimieren (Ableiten \(=\) Normalengleichung). Betragssumme oder Maximumsnorm wären viel unhandlicher.</div>` },
+
+     { t:"Ausgleichsgerade / -parabel", k:"data fitting",
+       def:String.raw`Fit \(P(x)=a_0+a_1x+\dots+a_mx^{m}\) an Punkte \((x_i,y_i)\): Zeilen \((1,x_i,\dots,x_i^{m})\) bilden \(A\), rechte Seite \(y_i\) bildet \(b\); löse \(A^{\mathsf T}A\,a=A^{\mathsf T}b\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> geht keine Kurve exakt durch alle Messpunkte, sucht man die, die möglichst nah dran ist.</span>
+         <span class="idea"><b>Bausteine:</b> genau die Normalengleichung — nur sind die Unbekannten jetzt die Koeffizienten \(a_i\) des Polynoms; \(A\) enthält zeilenweise die Potenzen der \(x_i\).</span>
+         <span class="idea"><b>Warum praktisch:</b> Standardwerkzeug für Messdaten (Ausgleichsgerade/-parabel), das minimale \(\sum_i(P(x_i)-y_i)^2\) liefert.</span>`,
+       bsp:String.raw`<p>Beste Parabel \(P(x)=a_0+a_1x+a_2x^2\) durch \((0,5),(-1,3),(1,3),(2,1)\) (Blatt 20 V3b).</p>
+         <div class="step">Zeilen \((1,x_i,x_i^2)\Rightarrow A^{\mathsf T}A=\begin{pmatrix}4&2&6\\2&6&8\\6&8&18\end{pmatrix}\), \(A^{\mathsf T}b=\begin{pmatrix}12\\2\\10\end{pmatrix}\).</div>
+         <div class="step">System lösen \(\Rightarrow a_0=\tfrac{22}5,\ a_1=\tfrac15,\ a_2=-1\).</div>
+         <div class="step">Ausgleichsparabel \(P(x)=-x^{2}+\tfrac15x+\tfrac{22}5\).</div>` },
+   ]},
+   { h:"Pseudoinverse & SVD", cards:[
+     { t:"Singulärwertzerlegung (SVD)",
+       def:String.raw`Jede Matrix \(A\in K^{m\times n}\): \[A=U\Sigma V^{*},\quad \Sigma=\begin{pmatrix}D&0\\0&0\end{pmatrix},\ D=\operatorname{diag}(\sigma_1\ge\dots\ge\sigma_r>0),\]\(U,V\) unitär. Die \(\sigma_i\) sind die Wurzeln der Eigenwerte von \(A^{*}A\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> jede lineare Abbildung ist „drehen — skalieren — drehen". Die Skalierungsfaktoren sind die Singulärwerte \(\sigma_i\).</span>
+         <span class="idea"><b>Bausteine:</b> \(V\) und \(U\) sind orthonormale Richtungen (aus \(A^{*}A\) bzw. \(AA^{*}\)), \(\Sigma\) enthält die \(\sigma_i\) — sie messen, wie stark \(A\) in jeder Hauptrichtung streckt.</span>
+         <span class="idea"><b>Warum praktisch:</b> funktioniert für <b>jede</b> Matrix (auch rechteckig, auch singulär) und ist die Grundlage für Rang, Kondition, Pseudoinverse und Bestapproximation.</span>`,
+       bsp:String.raw`<p>Für \(A=\begin{pmatrix}0&1&0\\-3&0&2\end{pmatrix}\) (Blatt 21 H1):</p>
+         <div class="step">\(A^{*}A\) bilden, seine Eigenwerte \(=\sigma_i^2\) und Eigenvektoren bestimmen \(\Rightarrow V\) und die \(\sigma_i\).</div>
+         <div class="step">\(u_i=\tfrac1{\sigma_i}A v_i\) liefert die Spalten von \(U\).</div>
+         <div class="step">Zusammensetzen: \(A=U\Sigma V^{\mathsf T}\).</div>` },
+
+     { t:"Pseudoinverse (Moore–Penrose) A⁺",
+       def:String.raw`Eindeutig durch die vier Axiome \(AA^{+}A=A,\ A^{+}AA^{+}=A^{+},\ (AA^{+})^{*}=AA^{+},\ (A^{+}A)^{*}=A^{+}A\). Konstruktion aus SVD: \[A^{+}=V\Sigma^{+}U^{*},\quad \Sigma^{+}=\begin{pmatrix}D^{-1}&0\\0&0\end{pmatrix}.\]Für \(A\) injektiv: \(A^{+}=(A^{*}A)^{-1}A^{*}\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> ein „Ersatz für die Inverse", der auch für nicht-quadratische oder nicht-invertierbare Matrizen funktioniert.</span>
+         <span class="idea"><b>Bausteine:</b> in der SVD werden nur die von \(0\) verschiedenen Singulärwerte invertiert (\(\Sigma\to\Sigma^{+}\)); der Rest bleibt \(0\).</span>
+         <span class="idea"><b>Warum praktisch:</b> \(x_0=A^{+}b\) ist die kleinste-Quadrate-Lösung mit <b>kleinster Norm</b>. Für invertierbares \(A\) ist \(A^{+}=A^{-1}\), für \(A=0\) ist \(A^{+}=0\).</span>`,
+       bsp:String.raw`<p>Löse \(Ax=b\) mit \(A=\begin{pmatrix}0&1&0\\-3&0&2\end{pmatrix},\ b=\binom11\) (Blatt 21 H1).</p>
+         <div class="step">SVD \(\to\Sigma^{+}\) (Kehrwerte der \(\sigma_i\)) \(\to A^{+}=V\Sigma^{+}U^{\mathsf T}\).</div>
+         <div class="step">\(x_0=A^{+}b\) ist unter allen Fehler-Minimierern der mit kleinster Norm.</div>
+         <p>Dasselbe Ergebnis wie „scharfes Hinschauen", aber als sicheres Verfahren.</p>` },
+   ]}
+  ]},
+
+/* ============= 10) SPEKTRALSATZ & NORMALE MATRIZEN ============= */
+{ key:"spektralsatz", title:"Spektralsatz & normale Matrizen", icon:"◎", g:3,
+  tag:"normal, symmetrisch, orthogonal, unitäre Diagonalisierung",
+  lead:String.raw`Der Spektralsatz beantwortet: <b>Wann</b> gibt es eine <b>orthonormale</b> Eigenbasis? Antwort: genau dann, wenn die Matrix <b>normal</b> ist (\(AA^{*}=A^{*}A\)). Symmetrische, orthogonale und hermitesche Matrizen sind die wichtigsten Beispiele.`,
+  blocks:[
+   { h:"Begriffe", cards:[
+     { t:"Normal, symmetrisch, orthogonal, unitär",
+       def:String.raw`<table class="reftable">
+         <tr><td class="lhs">normal</td><td class="cond">\(AA^{*}=A^{*}A\)</td></tr>
+         <tr><td class="lhs">(anti)symmetrisch</td><td class="cond">\(A^{\mathsf T}=\pm A\)</td></tr>
+         <tr><td class="lhs">hermitesch</td><td class="cond">\(A^{*}=A\)</td></tr>
+         <tr><td class="lhs">orthogonal / unitär</td><td class="cond">\(A^{\mathsf T}A=I\) / \(A^{*}A=I\)</td></tr></table>
+         Symmetrisch, orthogonal, (anti)hermitesch \(\Rightarrow\) normal.`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> „normal" ist der <b>Oberbegriff</b> — die Matrix vertauscht mit ihrer Adjungierten \(A^{*}\).</span>
+         <span class="idea"><b>Bausteine:</b> die drei Standardklassen (symmetrisch/hermitesch, orthogonal/unitär, antisymmetrisch) sind alle Spezialfälle von „normal".</span>
+         <span class="idea"><b>Warum praktisch:</b> genau „normal" ist die Bedingung für eine <b>orthonormale</b> Eigenbasis (Spektralsatz) — man muss also nur diese eine Eigenschaft prüfen.</span>`,
+       bsp:String.raw`<p>Drehmatrix \(\begin{pmatrix}\cos\varphi&-\sin\varphi\\\sin\varphi&\cos\varphi\end{pmatrix}\):</p>
+         <div class="step">orthogonal (\(A^{\mathsf T}A=I\)) \(\Rightarrow\) normal;</div>
+         <div class="step">aber weder symmetrisch noch über \(\mathbb R\) diagonalisierbar (Eigenwerte \(e^{\pm i\varphi}\) sind komplex).</div>
+         <p>Über \(\mathbb C\) ist sie unitär diagonalisierbar — der Spektralsatz greift dort.</p>` },
+
+     { t:"Lage der Eigenwerte",
+       def:String.raw`<table class="reftable">
+         <tr><td class="lhs">hermitesch/symmetrisch</td><td class="cond">\(\lambda\in\mathbb R\)</td></tr>
+         <tr><td class="lhs">antihermitesch</td><td class="cond">\(\lambda\in i\mathbb R\)</td></tr>
+         <tr><td class="lhs">unitär/orthogonal</td><td class="cond">\(|\lambda|=1\)</td></tr></table>`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> die Symmetrie-Eigenschaft einer Matrix schränkt ein, <b>wo</b> ihre Eigenwerte liegen.</span>
+         <span class="idea"><b>Bausteine:</b> symmetrisch \(\to\) reelle Achse, antisymmetrisch \(\to\) imaginäre Achse, orthogonal/unitär \(\to\) Einheitskreis.</span>
+         <span class="idea"><b>Warum praktisch:</b> ein schneller Plausibilitätscheck — kommt bei einer symmetrischen Matrix ein komplexer Eigenwert heraus, hat man sich verrechnet.</span>`,
+       bsp:String.raw`<p>Die orthogonale Matrix aus Blatt 21 H2 hat Spektrum \(\{\tfrac12(1\pm\sqrt3\,i)\}\).</p>
+         <div class="step">\(\bigl|\tfrac12(1\pm\sqrt3i)\bigr|=\tfrac12\sqrt{1+3}=\tfrac12\cdot2=1\) ✓ — beide auf dem Einheitskreis, wie es für orthogonale Matrizen sein muss.</div>` },
+   ]},
+   { h:"Diagonalisieren", cards:[
+     { t:"Spektralsatz & unitäre Diagonalisierung",
+       def:String.raw`\(A\) normal \(\iff\exists\) unitäres \(S\) mit \(S^{*}AS=D\) diagonal. Reell symmetrisch \(\iff\exists\) orthogonales \(T\) mit \(T^{\mathsf T}AT=D\), \(D\) reell.`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> normale Matrizen lassen sich nicht nur diagonalisieren, sondern sogar mit einer <b>rechtwinkligen</b> (orthonormalen) Eigenbasis.</span>
+         <span class="idea"><b>Bausteine:</b> Eigenwerte und Eigenräume bestimmen; Eigenräume zu <b>verschiedenen</b> Eigenwerten stehen automatisch senkrecht — man muss nur <b>innerhalb</b> jedes Eigenraums mit Gram-Schmidt orthonormieren.</span>
+         <span class="idea"><b>Warum praktisch:</b> \(T\) orthogonal bedeutet \(T^{-1}=T^{\mathsf T}\) — das Invertieren entfällt. Kontrolle: alg. \(=\) geom. Vielfachheit (sonst Rechenfehler).</span>`,
+       bsp:String.raw`<p>\(A=\begin{pmatrix}1&2\\2&1\end{pmatrix}\) (symmetrisch): EW \(3,-1\), Eigenvektoren \(\binom11,\binom1{-1}\).</p>
+         <div class="step">Sie stehen bereits senkrecht (\(\langle\binom11,\binom1{-1}\rangle=0\)); nur normieren.</div>
+         <div class="step">\(T=\tfrac1{\sqrt2}\begin{pmatrix}1&1\\1&-1\end{pmatrix}\) (orthogonal), \(T^{\mathsf T}AT=\begin{pmatrix}3&0\\0&-1\end{pmatrix}\).</div>
+         <p>\(D\) reell, \(T\) orthogonal — genau wie der Spektralsatz für symmetrische Matrizen verspricht.</p>` },
+   ]}
+  ]},
+
+/* ============= 11) AFFINE & PROJEKTIVE RÄUME ============= */
+{ key:"affin", title:"Affine & projektive Räume", icon:"△", g:4,
+  tag:"Parameter- ↔ Koordinatenform, Affinitäten, Fixpunkte",
+  lead:String.raw`Ein affiner Raum ist ein „Vektorraum ohne festen Nullpunkt": Geraden und Ebenen sind ein <b>Stützpunkt plus Richtungsraum</b>. Wichtige Handgriffe: zwischen Parameter- und Koordinatenform wechseln (LGS lösen) sowie Affinitäten und ihre Fixpunkte bestimmen.`,
+  blocks:[
+   { h:"Beschreibungen", cards:[
+     { t:"Affiner Unterraum: Parameter- ↔ Koordinatenform",
+       def:String.raw`<b>Parameterform:</b> \(X=p+\langle d_1,\dots,d_k\rangle\) (Stützpunkt \(+\) Richtungsraum). <b>Koordinatenform:</b> \(X=\{x:\ Ax=b\}\), Lösungsmenge eines LGS. Umrechnung: Normalenvektoren \(n\) mit \(n\cdot d_i=0\) liefern die Zeilen von \(A\), \(b=Ap\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> dieselbe Gerade/Ebene, zwei Sichtweisen — einmal „so wird sie erzeugt" (Parameter), einmal „diese Gleichungen erfüllt sie" (Koordinaten).</span>
+         <span class="idea"><b>Bausteine:</b> <b>Parameter \(\to\) Koordinaten:</b> Vektoren \(n\) finden, die auf allen Richtungen \(d_i\) senkrecht stehen (\(=\) Zeilen von \(A\)), rechte Seite über den Stützpunkt. <b>Koordinaten \(\to\) Parameter:</b> das LGS mit Gauß lösen (spezielle Lösung \(=p\), Kern \(=\) Richtungsraum).</span>
+         <span class="idea"><b>Warum praktisch:</b> je nach Aufgabe braucht man mal die eine, mal die andere Form — das Umrechnen ist reines Gleichungslösen.</span>`,
+       bsp:String.raw`<p>\(X=\begin{pmatrix}1\\2\\-3\\0\end{pmatrix}+\lambda\begin{pmatrix}1\\0\\-1\\1\end{pmatrix}+\mu\begin{pmatrix}2\\4\\-3\\1\end{pmatrix}\subseteq\mathbb R^4\) (Blatt 22 V1c). Richtungsraum ist \(2\)-dim \(\Rightarrow n-k=2\) Gleichungen.</p>
+         <div class="step">Normalenvektoren \(n\perp d_1,d_2\) lösen \(n\cdot d_1=0,\ n\cdot d_2=0\): z.B. \(n_1=(-4,1,0,4),\ n_2=(2,0,1,-1)\).</div>
+         <div class="step">Rechte Seite \(n_i\cdot p\): \(n_1\cdot p=-2,\ n_2\cdot p=-1\).</div>
+         <div class="step">Koordinatenform: \(\begin{cases}-4x_1+x_2+4x_4=-2\\ \ \ 2x_1+x_3-x_4=-1\end{cases}\)</div>` },
+
+     { t:"Kern & affiner Unterraum als LGS",
+       def:String.raw`Jeder Untervektorraum \(U\le K^{n}\) ist Kern einer Matrix (\(U=\operatorname{Ker} A\)); jeder affine Unterraum \(X\sqsubseteq K^{n}\) ist Lösungsmenge eines LGS \(Ax=b\). Umgekehrt: ist \(\{x:Ax=b\}\neq\varnothing\), so ist es affin mit Richtungsraum \(\operatorname{Ker} A\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> Untervektorräume und affine Unterräume sind genau die Lösungsmengen linearer Gleichungssysteme.</span>
+         <span class="idea"><b>Bausteine:</b> homogenes LGS \(\to\) Untervektorraum (geht durch \(0\)); inhomogenes LGS \(\to\) affiner Unterraum (verschoben um eine spezielle Lösung).</span>
+         <span class="idea"><b>Warum praktisch:</b> der Richtungsraum ist immer der Kern der Koeffizientenmatrix — die rechte Seite verschiebt nur die Lage, nicht die Gestalt.</span>`,
+       bsp:String.raw`<p>\(X=\{x\in\mathbb R^3:\ x_1+x_2+x_3=1\}\) ist eine Ebene.</p>
+         <div class="step">Spezielle Lösung (Stützpunkt) \(p=(1,0,0)\).</div>
+         <div class="step">Richtungsraum \(\operatorname{Ker}(1,1,1)=\langle(1,-1,0),(1,0,-1)\rangle\).</div>
+         <p>Also \(X=(1,0,0)+\langle(1,-1,0),(1,0,-1)\rangle\) — Koordinatenform in Parameterform übersetzt.</p>` },
+   ]},
+   { h:"Affinitäten", cards:[
+     { t:"Affine Abbildung, Affinität, Dilatation",
+       def:String.raw`Affine Abbildung \(g(x)=Ax+t\) mit linearem Anteil (Differenzabbildung) \(f=A\). <b>Affinität:</b> \(g\) bijektiv (\(A\in\mathrm{GL}_n\)), Gruppe \(\mathrm{AGL}(K^n)\). <b>Dilatation:</b> bildet jede Gerade auf eine parallele ab \(\iff f=\mu\,\mathrm{id}\) für ein \(\mu\in K^{\times}\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> eine affine Abbildung ist „linear plus Verschiebung" — sie darf drehen/scheren <b>und</b> verschieben.</span>
+         <span class="idea"><b>Bausteine:</b> der lineare Anteil \(A\) bestimmt die Geometrie, der Vektor \(t\) nur die Lage. Eine Dilatation ist der Spezialfall reiner Skalierung (\(f=\mu\,\mathrm{id}\)) — Zoomen in einer Landkarte.</span>
+         <span class="idea"><b>Warum praktisch:</b> wie bei linearen Abbildungen genügt eine <b>affine Basis</b>, um \(g\) festzulegen (affine Fortsetzung).</span>`,
+       bsp:String.raw`<p><b>Affine Fortsetzung:</b> sind \((a_0,\dots,a_n)\) eine affine Basis von \(X\) und \((b_0,\dots,b_n)\) beliebige Bildpunkte, so gibt es <b>genau eine</b> affine Abbildung \(g\) mit \(g(a_i)=b_i\).</p>
+         <p>Das ist das affine Gegenstück zum Prinzip der linearen Fortsetzung — man legt \(g\) durch endlich viele Punkte fest.</p>` },
+
+     { t:"Fixpunktmenge", k:"Fix(g)",
+       def:String.raw`\[\operatorname{Fix}(g)=\{a:\ g(a)=a\}=\{x:\ (A-I)x=-t\}.\]Ist \(\operatorname{Fix}(g)\neq\varnothing\), so ist es ein affiner Unterraum mit Richtungsraum \(\operatorname{Ker}(A-I)=\operatorname{Eig}(A,1)\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> ein Fixpunkt ist ein Punkt, der von \(g\) nicht bewegt wird.</span>
+         <span class="idea"><b>Bausteine:</b> \(g(x)=x\) ist das LGS \((A-I)x=-t\); seine Lösungsmenge ist leer (reine Verschiebung) oder ein affiner Unterraum mit Richtungsraum \(\operatorname{Eig}(A,1)\).</span>
+         <span class="idea"><b>Warum praktisch:</b> bei einer Dilatation (\(f=\mu\,\mathrm{id}\), \(\mu\neq1\)) gibt es genau einen Fixpunkt — das Zentrum, um das „gezoomt" wird.</span>`,
+       bsp:String.raw`<p>\(g(x)=2x+t\) (Streckung um \(\mu=2\)).</p>
+         <div class="step">\((A-I)=2I-I=I\), also LGS \(I x=-t\) mit eindeutiger Lösung \(x^{*}=-t\).</div>
+         <p>Genau ein Fixpunkt \(x^{*}=-t\): das Streckzentrum.</p>` },
+   ]}
+  ]},
+
+/* ============= 12) QUADRIKEN ============= */
+{ key:"quadriken", title:"Quadriken", icon:"⬭", g:4,
+  tag:"Matrixform, Hauptachsentransformation, Normalform & Typ",
+  lead:String.raw`Eine Quadrik ist die Lösungsmenge einer <b>quadratischen</b> Gleichung (Ellipse, Hyperbel, Parabel …). Dem Polynom sieht man den Typ nicht an — man schreibt es als Matrix und bringt es durch eine Hauptachsentransformation (Drehung \(+\) Verschiebung) in Normalform.`,
+  blocks:[
+   { h:"Aufstellen & Transformieren", cards:[
+     { t:"Quadratisches Polynom ↔ Matrix",
+       def:String.raw`\[P(x)=x^{\mathsf T}A\,x+2b^{\mathsf T}x+c,\qquad A=A^{\mathsf T},\ a_{ii}=\text{Koeff. }x_i^{2},\ a_{ij}=\tfrac12\,\text{Koeff. }x_ix_j.\]Erweiterte Matrix \(\tilde A=\begin{pmatrix}A&b\\b^{\mathsf T}&c\end{pmatrix}\).`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> eine quadratische Gleichung kompakt als Matrix schreiben, damit man mit ihr rechnen kann.</span>
+         <span class="idea"><b>Bausteine:</b> \(A\) (symmetrisch) fasst die quadratischen Terme, \(b\) die linearen, \(c\) die Konstante. Wichtig: der gemischte Term \(x_ix_j\) wird <b>halbiert</b> auf beide Plätze \(a_{ij}=a_{ji}\) verteilt.</span>
+         <span class="idea"><b>Warum praktisch:</b> \(A\) bestimmt den Typ (Form), \(b\) das Zentrum, \(c\) die Größe — alles steckt in \(\tilde A\).</span>`,
+       bsp:String.raw`<p>\(P=6X_1^{2}+9X_2^{2}-4X_1X_2+16X_1-22X_2+9\) (Blatt 23 H1).</p>
+         <div class="step">Quadratisch: \(a_{11}=6,\ a_{22}=9\), gemischt \(-4X_1X_2\Rightarrow a_{12}=a_{21}=-2\).</div>
+         <div class="step">\(A=\begin{pmatrix}6&-2\\-2&9\end{pmatrix},\quad b=\begin{pmatrix}8\\-11\end{pmatrix},\quad c=9.\)</div>` },
+
+     { t:"Hauptachsentransformation", k:"Drehung + Verschiebung",
+       def:String.raw`① \(A\) orthogonal diagonalisieren (Spektralsatz): \(T^{\mathsf T}AT=\operatorname{diag}(\lambda_i)\) \(\to\) Drehung beseitigt die Mischterme. ② Quadratische Ergänzung beseitigt die Linearterme (Verschiebung ins Zentrum). Ergebnis: Normalform \(\sum\lambda_i y_i^{2}=\text{const}\) bzw. mit Parabel-Term.`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> die Quadrik so drehen und verschieben, dass sie „gerade" in Normalform liegt und man den Typ sieht.</span>
+         <span class="idea"><b>Bausteine:</b> zwei Schritte — erst <b>drehen</b> in die Eigenrichtungen von \(A\) (Mischterme \(x_ix_j\) weg), dann per <b>quadratischer Ergänzung verschieben</b> (Linearterme weg).</span>
+         <span class="idea"><b>Warum praktisch:</b> die Eigenwerte \(\lambda_i\) und ihre Vorzeichen legen den Typ eindeutig fest — danach ist die Skizze leicht.</span>`,
+       bsp:String.raw`<p>Für \(A=\begin{pmatrix}6&-2\\-2&9\end{pmatrix}\):</p>
+         <div class="step">\(\chi_A=\lambda^2-15\lambda+50=(\lambda-5)(\lambda-10)\Rightarrow\) Eigenwerte \(5,10>0\).</div>
+         <div class="step">Nach Drehung: \(5y_1^{2}+10y_2^{2}+(\text{Linearterme})\).</div>
+         <div class="step">Quadratische Ergänzung \(\Rightarrow 5\tilde y_1^{2}+10\tilde y_2^{2}=r\) mit \(r>0\).</div>
+         <p>Beide Vorzeichen positiv \(\Rightarrow\) <b>Ellipse</b>.</p>` },
+   ]},
+   { h:"Klassifikation", cards:[
+     { t:"Normalform & Typ ablesen",
+       def:String.raw`Vorzeichen der Eigenwerte von \(A\) (nach Verschiebung) im \(\mathbb R^2\):
+         <table class="reftable">
+         <tr><td class="lhs">\(\lambda_1,\lambda_2>0\)</td><td class="cond">Ellipse</td></tr>
+         <tr><td class="lhs">\(\lambda_1>0>\lambda_2\)</td><td class="cond">Hyperbel</td></tr>
+         <tr><td class="lhs">ein \(\lambda=0\) (Linearterm bleibt)</td><td class="cond">Parabel</td></tr></table>`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> allein die Vorzeichen der Eigenwerte entscheiden, welche Art von Kurve/Fläche vorliegt.</span>
+         <span class="idea"><b>Bausteine:</b> gleiche Vorzeichen \(\to\) Ellipse, verschiedene \(\to\) Hyperbel; ein Eigenwert \(=0\) mit übrig bleibendem Linearterm \(\to\) Parabel.</span>
+         <span class="idea"><b>Warum praktisch:</b> ohne Skizze den Typ bestimmen. <b>Tipp:</b> zur Kontrolle Punkte per Punktprobe in die Gleichung einsetzen.</span>`,
+       bsp:String.raw`<p>\(9X_1^{2}+X_2^{2}+X_3^{2}-6X_1X_2-6X_1X_3+2X_2X_3-\dots\) (Blatt 23 H2).</p>
+         <div class="step">\(A=\begin{pmatrix}9&-3&-3\\-3&1&1\\-3&1&1\end{pmatrix}\) hat \(\operatorname{rang}A=1\) (zwei Zeilen sind Vielfache) \(\Rightarrow\) zwei Eigenwerte \(=0\).</div>
+         <div class="step">Die verbleibenden Linearterme machen daraus einen <b>Parabel-Typ</b> (parabolischer Zylinder).</div>
+         <p>Dem Polynom sieht man das nicht an — Ausrechnen der Matrix verrät es.</p>` },
+   ]}
+  ]},
+
+/* ============= 13) DUALRAUM & TENSORPRODUKT ============= */
+{ key:"dualtensor", title:"Dualraum & Tensorprodukt", icon:"⊗", g:4,
+  tag:"duale Basis, Annullator, Bidualraum ι, f⊗g, Tensorrang",
+  lead:String.raw`Das <b>Rechen-Handwerkszeug</b> zu Blatt 24/25: duale Basis bestimmen, Annullator, Bidualraum mit \(\iota\), Kronecker-Produkt, Tensorrang. Fürs <b>Bild im Kopf</b> vorher kurz reinschauen: <a href="#/ref/strukturen">Räume &amp; Strukturen</a> (was sind \(V^{*}\) und \(V^{**}\)?) und <a href="#/ref/tensoren">Tensoren verstehen</a> (was ist \(\otimes\)?).`,
+  blocks:[
+   { h:"Dualraum & duale Basis", cards:[
+     { t:"Duale Basis", k:"bᵢ*(bⱼ)=δᵢⱼ",
+       def:String.raw`Zu einer Basis \(B=(b_1,\dots,b_n)\) von \(V\) ist die duale Basis \(B^{*}=(b_1^{*},\dots,b_n^{*})\) von \(V^{*}\) definiert durch \[b_i^{*}(b_j)=\delta_{ij}.\]\(b_i^{*}\) liest die \(i\)-te Koordinate bzgl. \(B\) ab. Als Matrix: die \(b_i^{*}\) sind die Zeilen von \(T^{-1}\), wenn \(T=(b_1\mid\cdots\mid b_n)\).
+<div class="smap"><svg viewBox="0 0 880 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Duale Basis: b i Stern spricht genau auf b i an">
+<rect x="40" y="70" width="230" height="130" rx="12" class="b1"/>
+<text x="155" y="100" text-anchor="middle" class="t">V — Vektoren</text>
+<text x="155" y="126" text-anchor="middle" class="m">Basis b₁, b₂</text>
+<text x="155" y="150" text-anchor="middle" class="s">v = 3b₁ + 5b₂</text>
+<text x="155" y="172" text-anchor="middle" class="s">Koordinaten 3 und 5</text>
+<text x="441" y="92" text-anchor="middle" class="t">bᵢ*(bⱼ) = δᵢⱼ</text>
+<text x="425" y="118" text-anchor="middle" class="s">b₁</text>
+<text x="467" y="118" text-anchor="middle" class="s">b₂</text>
+<text x="400" y="143" text-anchor="end" class="s">b₁*</text>
+<text x="400" y="173" text-anchor="end" class="s">b₂*</text>
+<rect x="410" y="126" width="40" height="26" class="b2"/><rect x="452" y="126" width="40" height="26" class="bx"/>
+<rect x="410" y="156" width="40" height="26" class="bx"/><rect x="452" y="156" width="40" height="26" class="b2"/>
+<text x="430" y="144" text-anchor="middle" class="m">1</text><text x="472" y="144" text-anchor="middle" class="m">0</text>
+<text x="430" y="174" text-anchor="middle" class="m">0</text><text x="472" y="174" text-anchor="middle" class="m">1</text>
+<rect x="610" y="70" width="230" height="130" rx="12" class="b3"/>
+<text x="725" y="100" text-anchor="middle" class="t">V* — Messgeräte</text>
+<text x="725" y="126" text-anchor="middle" class="m">duale Basis b₁*, b₂*</text>
+<text x="725" y="150" text-anchor="middle" class="s">b₁*(v) = 3, b₂*(v) = 5</text>
+<text x="725" y="172" text-anchor="middle" class="s">lesen Koordinaten ab</text>
+<text x="440" y="232" text-anchor="middle" class="s">1 = spricht an, 0 = ignoriert: b₁* reagiert nur auf b₁ — das perfekte Koordinaten-Ablesegerät.</text>
+</svg></div>`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> zu jeder Basis gibt es „Koordinaten-Messgeräte": \(b_i^{*}\) liest genau die \(i\)-te Koordinate eines Vektors ab.</span>
+         <span class="idea"><b>Bausteine:</b> definiert durch \(b_i^{*}(b_j)=\delta_{ij}\) (\(=1\) bei \(i=j\), sonst \(0\)). Konkret sind die \(b_i^{*}\) die Zeilen von \(T^{-1}\).</span>
+         <span class="idea"><b>Warum praktisch:</b> jede Linearform ist durch ihre Werte auf einer Basis festgelegt; in endlicher Dimension ist \(B^{*}\) wieder eine Basis, also \(\dim V^{*}=\dim V\).</span>`,
+       bsp:String.raw`<p>\(b_1=(1,1),\ b_2=(1,-1)\).</p>
+         <div class="step">\(T=\begin{pmatrix}1&1\\1&-1\end{pmatrix}\), \(T^{-1}=\tfrac12\begin{pmatrix}1&1\\1&-1\end{pmatrix}\).</div>
+         <div class="step">Zeilen von \(T^{-1}\): \(b_1^{*}(x)=\tfrac12(x_1+x_2),\quad b_2^{*}(x)=\tfrac12(x_1-x_2)\).</div>
+         <div class="step">Probe: \(b_1^{*}(b_1)=\tfrac12(1+1)=1\), \(b_1^{*}(b_2)=\tfrac12(1-1)=0\) ✓.</div>` },
+
+     { t:"Annullator U°", k:"U° ≤ V*",
+       def:String.raw`\[U^{\circ}=\{\varphi\in V^{*}:\ \varphi|_U=0\},\qquad \dim U+\dim U^{\circ}=\dim V.\]<span class="idea"><b>Macht:</b> sammelt alle Messgeräte, die auf ganz \(U\) den Wert \(0\) zeigen — die \(U\) also komplett <b>ignorieren</b>.</span>
+<span class="idea"><b>Ist:</b> selbst ein Unterraum von \(V^{*}\); seine Dimension ergänzt \(\dim U\) exakt zu \(\dim V\).</span>`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> der Annullator ist der „blinde Fleck-Verein": alle Linearformen, für die \(U\) unsichtbar ist.</span>
+         <span class="idea"><b>Rechen-Trick:</b> \(U^{\circ}\) bestimmen ist nur ein lineares Gleichungssystem — \(\varphi(u)=0\) für eine Basis von \(U\) fordern, fertig.</span>`,
+       bsp:String.raw`<p>\(V=\mathbb R^{3}\), \(U=\langle e_1\rangle\).</p>
+         <div class="step">\(U^{\circ}=\{\varphi:\ \varphi(e_1)=0\}=\langle e_2^{*},e_3^{*}\rangle\) (Formen, die die erste Koordinate ignorieren).</div>
+         <div class="step">\(\dim U^{\circ}=2=3-1=\dim V-\dim U\) ✓.</div>` },
+
+     { t:"Bidualraum & natürlicher Homomorphismus ι", k:"ι(v)(φ) = φ(v)",
+       def:String.raw`\[\iota:V\to V^{**},\qquad \iota(v)(\varphi)=\varphi(v).\]<span class="idea"><b>Macht:</b> aus dem Vektor \(v\) die Vorschrift „setz mich ein": \(\iota(v)\) frisst eine Linearform \(\varphi\) und antwortet mit deren Wert auf \(v\).</span>
+<span class="idea"><b>In endlicher Dimension:</b> \(\iota\) ist ein Isomorphismus, und zwar <b>kanonisch</b> — die Definition kommt ohne jede Basiswahl aus. \(V\cong V^{*}\) gilt zwar auch (gleiche Dimension), aber nur mit gewählter Basis.</span>`,
+       worte:String.raw`<span class="idea"><b>Warum injektiv:</b> zu jedem \(v\neq0\) gibt es eine Linearform mit \(\varphi(v)\neq0\) (Basis ergänzen, Koordinate ablesen) — also ist \(\iota(v)\neq0\). Injektiv + gleiche Dimension = Isomorphismus.</span>
+         <span class="idea"><b>Warum „kanonisch" zählt:</b> weil keine Wahl drinsteckt, verträgt sich \(\iota\) mit allem — deshalb darf man \(V\) und \(V^{**}\) stillschweigend identifizieren und sagen: nach zweimal Dualisieren ist man wieder zu Hause.</span>`,
+       bsp:String.raw`<div class="step">\(v=(2,1)\), \(\varphi(x)=3x_1-x_2\): \(\ \iota(v)(\varphi)=\varphi(v)=3\cdot2-1=5\).</div>
+         <div class="step"><b>Basis-Probe:</b> \(\iota(b_i)\bigl(b_j^{*}\bigr)=b_j^{*}(b_i)=\delta_{ij}\) — \(\iota\) schickt die Basis \(B\) genau auf die Bidualbasis \(B^{**}\).</div>` },
+   ]},
+
+   { h:"Annullator & Bidual im Bild", wide:true, cards:[
+     { t:"U → U° → U°° — und zurück", k:"U°° = ι(U)",
+       def:String.raw`<p>Dualisieren und Annullieren laufen parallel: oben die Räume, unten die Unterräume. Nach zwei Schritten ist man — dank \(\iota\) — wieder am Start:</p>
+<div class="smap"><svg viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kette U, U Grad, U Grad Grad mit Rueckkehr ueber iota">
+<defs><marker id="annArr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" class="arr"/></marker></defs>
+<text x="450" y="16" text-anchor="middle" class="lab">ι: v ↦ (φ ↦ φ(v)) — kanonisch, ohne Basiswahl</text>
+<path d="M160 58 V24 H740 V56" class="fl dash" marker-end="url(#annArr)"/>
+<rect x="40" y="60" width="240" height="70" rx="10" class="b1"/>
+<text x="160" y="90" text-anchor="middle" class="t">V</text>
+<text x="160" y="112" text-anchor="middle" class="s">alle Vektoren · dim n</text>
+<path d="M282 95 H326" class="fl" marker-end="url(#annArr)"/>
+<text x="304" y="86" text-anchor="middle" class="t">*</text>
+<rect x="330" y="60" width="240" height="70" rx="10" class="b3"/>
+<text x="450" y="90" text-anchor="middle" class="t">V*</text>
+<text x="450" y="112" text-anchor="middle" class="s">alle Linearformen · dim n</text>
+<path d="M572 95 H616" class="fl" marker-end="url(#annArr)"/>
+<text x="594" y="86" text-anchor="middle" class="t">*</text>
+<rect x="620" y="60" width="240" height="70" rx="10" class="b3"/>
+<text x="740" y="90" text-anchor="middle" class="t">V**</text>
+<text x="740" y="112" text-anchor="middle" class="s">misst Messgeräte · dim n</text>
+<path d="M160 176 V134" class="fl dash"/>
+<path d="M450 176 V134" class="fl dash"/>
+<path d="M740 176 V134" class="fl dash"/>
+<text x="170" y="159" class="lab">≤</text>
+<text x="460" y="159" class="lab">≤</text>
+<text x="750" y="159" class="lab">≤</text>
+<rect x="60" y="180" width="200" height="70" rx="10" class="b4"/>
+<text x="160" y="205" text-anchor="middle" class="t">U</text>
+<text x="160" y="227" text-anchor="middle" class="s">Unterraum · dim k</text>
+<path d="M262 215 H346" class="fl" marker-end="url(#annArr)"/>
+<text x="304" y="205" text-anchor="middle" class="lab">annullieren</text>
+<rect x="350" y="180" width="200" height="70" rx="10" class="b4"/>
+<text x="450" y="205" text-anchor="middle" class="t">U° — Annullator</text>
+<text x="450" y="227" text-anchor="middle" class="s">dim n − k</text>
+<path d="M562 215 H636" class="fl" marker-end="url(#annArr)"/>
+<text x="599" y="205" text-anchor="middle" class="lab">nochmal °</text>
+<rect x="640" y="180" width="200" height="70" rx="10" class="b4"/>
+<text x="740" y="205" text-anchor="middle" class="t">U°° = (U°)°</text>
+<text x="740" y="227" text-anchor="middle" class="s">dim k — wieder U!</text>
+<path d="M740 252 V285 H160 V254" class="fl dash" marker-end="url(#annArr)"/>
+<text x="450" y="274" text-anchor="middle" class="lab">unter ι gilt U°° = ι(U) — zweimal annullieren führt zu U zurück</text>
+</svg></div>`,
+       worte:String.raw`<span class="idea"><b>So liest du es:</b> jede \(*\)-Stufe behält die Dimension \(n\); beim Annullieren springt die Unterraum-Dimension von \(k\) auf \(n-k\) — und beim zweiten Mal zurück auf \(k\). Dass \(U^{\circ\circ}\) nicht nur die richtige Dimension hat, sondern (unter \(\iota\)) exakt \(U\) <b>ist</b>, liegt daran, dass jedes \(\iota(u)\) auf ganz \(U^{\circ}\) verschwindet: \(\iota(u)(\varphi)=\varphi(u)=0\).</span>`,
+       bsp:String.raw`<p>\(V=\mathbb R^{3}\) (also \(n=3\)), \(U=\langle e_1\rangle\) (also \(k=1\)):</p>
+<div class="step">\(U^{\circ}=\langle e_2^{*},e_3^{*}\rangle\) — Dimension \(3-1=2\) ✓.</div>
+<div class="step">\(U^{\circ\circ}=\{\,\xi\in V^{**}:\ \xi(e_2^{*})=\xi(e_3^{*})=0\,\}=\langle\iota(e_1)\rangle\) — Dimension \(1\), und via \(\iota\) genau wieder \(\langle e_1\rangle=U\) ✓.</div>` },
+   ]},
+
+   { h:"Tensorprodukt — rechnen", cards:[
+     { t:"Basis & Dimension von V⊗W", k:"dim = m·n",
+       def:String.raw`\[\dim(V\otimes W)=\dim V\cdot\dim W,\qquad\text{Basis: alle}\ b_i\otimes c_j.\]<span class="idea">Ein Tensor ist festgelegt durch seine Koeffizienten: \(t=\sum_{i,j}a_{ij}\,b_i\otimes c_j\) \(\leftrightarrow\) <b>Koeffizienten-Matrix</b> \((a_{ij})\). Mit ihr rechnet man.</span>`,
+       worte:String.raw`<span class="idea"><b>Bild dazu:</b> die \(b_i\otimes c_j\) sind die „Kästchen" einer \(m\times n\)-Tabelle, die \(a_{ij}\) die Einträge — Details und Intuition in <a href="#/ref/tensoren">Tensoren verstehen</a>.</span>`,
+       bsp:String.raw`<div class="step">\(\mathbb R^2\otimes\mathbb R^3\): Basis \(e_1{\otimes}f_1,\ e_1{\otimes}f_2,\ e_1{\otimes}f_3,\ e_2{\otimes}f_1,\ e_2{\otimes}f_2,\ e_2{\otimes}f_3\) — sechs Stück, \(\dim=2\cdot3=6\) ✓.</div>` },
+
+     { t:"Natürlicher Isomorphismus V*⊗W ≅ Hom(V,W)", k:"φ⊗w ↦ (v ↦ φ(v)w)",
+       def:String.raw`\[V^{*}\otimes W\ \overset{\cong}{\longrightarrow}\ \operatorname{Hom}(V,W),\qquad \varphi\otimes w\ \mapsto\ \bigl(v\mapsto\varphi(v)\,w\bigr)\]<span class="idea">(in endlicher Dimension). „Erst messen, dann losschicken": reine Tensoren werden zu <b>Rang-1-Abbildungen</b>; ihre Summen füllen ganz \(\operatorname{Hom}(V,W)\).</span>`,
+       worte:String.raw`<span class="idea"><b>Warum „natürlich":</b> die Vorschrift braucht keine Basis — sie sagt nur, wie ein Paket wirkt. Dimensions-Check: beide Seiten haben \(\dim V\cdot\dim W\) ✓.</span>
+         <span class="idea"><b>Merkbild:</b> Matrizen <i>sind</i> Tensoren — jede Matrix ist eine Summe von Rang-1-Matrizen \(\varphi\otimes w\). Mehr dazu in <a href="#/ref/tensoren">Tensoren verstehen</a>.</span>`,
+       bsp:String.raw`<div class="step">\(\varphi=e_1^{*}\), \(w=e_2\) in \(\mathbb R^2\): \(\ (\varphi\otimes w)(v)=v_1e_2\), als Matrix \(\begin{pmatrix}0&0\\1&0\end{pmatrix}\) — Rang \(1\) ✓.</div>
+         <div class="step">Allgemein landet \(\sum_{i,j}a_{ij}\,e_j^{*}\otimes e_i\) auf der Matrix \((a_{ij})\) — der Isomorphismus ist das Sortieren der Koeffizienten.</div>` },
+
+     { t:"Kronecker-Produkt — die Matrix von f⊗g", k:"A⊗B",
+       def:String.raw`Für lineare Abbildungen \(f,g\) ist \(f\otimes g\) definiert durch \((f\otimes g)(u\otimes v)=f(u)\otimes g(v)\). Die zugehörige Matrix ist das <b>Kronecker-Produkt</b> \(A\otimes B\): jeder Eintrag \(a_{ij}\) von \(A\) wird durch den Block \(a_{ij}B\) ersetzt.
+<div class="smap"><svg viewBox="0 0 900 270" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kronecker-Produkt als Blockmatrix">
+<text x="90" y="88" text-anchor="middle" class="t">A</text>
+<rect x="50" y="100" width="40" height="40" class="b1"/><rect x="90" y="100" width="40" height="40" class="b1"/>
+<rect x="50" y="140" width="40" height="40" class="b1"/><rect x="90" y="140" width="40" height="40" class="b1"/>
+<text x="70" y="126" text-anchor="middle" class="m">1</text><text x="110" y="126" text-anchor="middle" class="m">2</text>
+<text x="70" y="166" text-anchor="middle" class="m">3</text><text x="110" y="166" text-anchor="middle" class="m">5</text>
+<text x="165" y="148" text-anchor="middle" class="t" style="font-size:20px">⊗</text>
+<text x="240" y="88" text-anchor="middle" class="t">B</text>
+<rect x="200" y="100" width="40" height="40" class="b2"/><rect x="240" y="100" width="40" height="40" class="b2"/>
+<rect x="200" y="140" width="40" height="40" class="b2"/><rect x="240" y="140" width="40" height="40" class="b2"/>
+<text x="220" y="126" text-anchor="middle" class="m">7</text><text x="260" y="126" text-anchor="middle" class="m">11</text>
+<text x="220" y="166" text-anchor="middle" class="m">13</text><text x="260" y="166" text-anchor="middle" class="m">17</text>
+<text x="318" y="148" text-anchor="middle" class="t" style="font-size:20px">=</text>
+<text x="440" y="40" text-anchor="middle" class="t">A ⊗ B: jeder Eintrag aᵢⱼ wird zum Block aᵢⱼ · B</text>
+<rect x="360" y="60" width="76" height="76" class="b2"/>
+<rect x="444" y="60" width="76" height="76" class="b3"/>
+<rect x="360" y="144" width="76" height="76" class="b4"/>
+<rect x="444" y="144" width="76" height="76" class="b5"/>
+<path d="M398 60 V136 M360 98 H436 M482 60 V136 M444 98 H520 M398 144 V220 M360 182 H436 M482 144 V220 M444 182 H520" class="axis"/>
+<text x="379" y="84" text-anchor="middle" class="m">7</text><text x="417" y="84" text-anchor="middle" class="m">11</text>
+<text x="379" y="122" text-anchor="middle" class="m">13</text><text x="417" y="122" text-anchor="middle" class="m">17</text>
+<text x="463" y="84" text-anchor="middle" class="m">14</text><text x="501" y="84" text-anchor="middle" class="m">22</text>
+<text x="463" y="122" text-anchor="middle" class="m">26</text><text x="501" y="122" text-anchor="middle" class="m">34</text>
+<text x="379" y="168" text-anchor="middle" class="m">21</text><text x="417" y="168" text-anchor="middle" class="m">33</text>
+<text x="379" y="206" text-anchor="middle" class="m">39</text><text x="417" y="206" text-anchor="middle" class="m">51</text>
+<text x="463" y="168" text-anchor="middle" class="m">35</text><text x="501" y="168" text-anchor="middle" class="m">55</text>
+<text x="463" y="206" text-anchor="middle" class="m">65</text><text x="501" y="206" text-anchor="middle" class="m">85</text>
+<text x="560" y="84" class="m">oben links: 1 · B</text>
+<text x="560" y="106" class="m">oben rechts: 2 · B</text>
+<text x="560" y="128" class="m">unten links: 3 · B</text>
+<text x="560" y="150" class="m">unten rechts: 5 · B</text>
+<text x="560" y="186" class="s">Größe: (2·2) × (2·2) = 4 × 4</text>
+<text x="450" y="252" text-anchor="middle" class="s">(A ⊗ B)(v ⊗ w) = Av ⊗ Bw — A wählt den Block, B arbeitet im Block.</text>
+</svg></div>`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> das Tensorprodukt „multipliziert" zwei Vektorräume zu einem größeren (Dimensionen multiplizieren sich).</span>
+         <span class="idea"><b>Bausteine:</b> auf Matrizen ist \(f\otimes g\) das <b>Kronecker-Produkt</b>: jeder Eintrag von \(f\) wird durch die ganze Matrix \(g\) ersetzt (blockweise skaliert).</span>
+         <span class="idea"><b>Warum praktisch:</b> so beschreibt man Abbildungen auf Produkten von Räumen mit einer einzigen (größeren) Matrix.</span>`,
+       bsp:String.raw`<p>\(f=\begin{pmatrix}1&2\\3&5\end{pmatrix},\ g=\begin{pmatrix}7&11\\13&17\end{pmatrix}\) (Blatt 25 V2b).</p>
+         <div class="step">Blockweise \(a_{ij}\,g\) einsetzen:</div>
+         \[f\otimes g=\begin{pmatrix}1g&2g\\3g&5g\end{pmatrix}=\begin{pmatrix}7&11&14&22\\13&17&26&34\\21&33&35&55\\39&51&65&85\end{pmatrix}.\]` },
+
+     { t:"Tensorrang = Matrixrang", k:"für V⊗W",
+       def:String.raw`Schreibe \(t\) bzgl. Basen \((b_i)\) von \(V\) und \((c_j)\) von \(W\) als \(t=\sum_{i,j}a_{ij}\,b_i\otimes c_j\). Dann:\[t\ \text{einfacher Tensor}\ (t=v\otimes w)\iff \operatorname{rang}(a_{ij})\le1.\]`,
+       worte:String.raw`<span class="idea"><b>Idee:</b> ob ein Tensor „einfach" ist (ein reines Produkt \(v\otimes w\)), sieht man an einer Matrix.</span>
+         <span class="idea"><b>Bausteine:</b> ein Tensor in \(V\otimes W\) entspricht seiner Koeffizientenmatrix \(A=(a_{ij})\); „einfach" heißt genau \(\operatorname{rang}A\le1\).</span>
+         <span class="idea"><b>Warum praktisch:</b> Rang \(\le1\) sieht man oft schon durch Hinschauen (alle Zeilen Vielfache voneinander). Für <b>dreifache</b> Tensorprodukte wird die Rangbestimmung dagegen NP-schwer!</span>`,
+       bsp:String.raw`<p><b>Einfach:</b> \(t=e_1\otimes e_1+e_1\otimes e_2+e_2\otimes e_1+e_2\otimes e_2\).</p>
+         <div class="step">Matrix \(A=\begin{pmatrix}1&1\\1&1\end{pmatrix}\), \(\operatorname{rang}=1\Rightarrow t=(e_1+e_2)\otimes(e_1+e_2)\).</div>
+         <p><b>Nicht einfach:</b> \(e_1\otimes e_1+e_2\otimes e_2\) hat \(A=\begin{pmatrix}1&0\\0&1\end{pmatrix}\), Rang \(2\Rightarrow\) kein reines Produkt.</p>` },
+   ]}
+  ]},
+
+];
+
+/* =========================================================================
+   MATERIAL.  Übungsblätter / Vortragsübungen / Prüfungen.
+   PDFs liegen in assets/Uebungsblaetter/{Aufgaben,Loesungen}/.
+   Jede Woche hat EIN Blatt (enthält Vortrags- UND Hausaufgaben); die Lösungen
+   sind getrennt abgelegt: HLoesung = Hausaufgaben, VLoesung = Vortragsübung.
+   Neues Blatt / neue Prüfung  =  einen Eintrag an die passende items-Liste hängen.
+   ========================================================================= */
+const MAT_DIR = "assets/Uebungsblaetter/";
+const aufg  = n => `Aufgaben/2026_Lineare_Algebra_Blatt_${n}.pdf`;
+const hloes = n => `Loesungen/2026_Lineare_Algebra_HLoesung_${n}.pdf`;
+const vloes = n => `Loesungen/2026_Lineare_Algebra_VLoesung_${n}.pdf`;
+const WEEKS = [14,15,16,17,18,19,20,21,22,23,24,25,26];
+const HLOES_BIS = 24;   // höchste Blattnummer mit vorhandener Hausaufgaben-Lösung
+const VLOES_BIS = 25;   // höchste Blattnummer mit vorhandener Vortrags-Lösung
+
+const MAT = {
+  uebungen: {
+    key:"uebungen", title:"Übungsblätter", icon:"📝", cls:"m1",
+    tag:"Blatt 14–26 · Aufgaben & Hausaufgaben-Lösungen",
+    lead:String.raw`Die wöchentlichen Übungsblätter (Hausaufgaben-Teil) mit Lösungen, sofern vorhanden. Zum Öffnen anklicken — die PDFs öffnen in einem neuen Tab.`,
+    items: WEEKS.map(n => ({ n, sheet:aufg(n), sol: n<=HLOES_BIS ? hloes(n) : null, solLabel:"✅ Lösung (Hausaufgaben)" }))
+  },
+  vortrag: {
+    key:"vortrag", title:"Vortragsübungen", icon:"🗣", cls:"m2",
+    tag:"Blatt 14–26 · Aufgaben & Vortrags-Lösungen",
+    lead:String.raw`Zu jeder Woche das Blatt und die Lösung der Vortragsübung (Präsenzteil), sofern vorhanden. Aufgaben stehen auf demselben Blatt wie die Hausaufgaben.`,
+    items: WEEKS.map(n => ({ n, sheet:aufg(n), sol: n<=VLOES_BIS ? vloes(n) : null, solLabel:"✅ Lösung (Vortrag)" }))
+  },
+  pruefungen: {
+    key:"pruefungen", title:"Prüfungen", icon:"🎓", cls:"m3",
+    tag:"Klausuren & Scheinklausuren — folgen noch",
+    lead:String.raw`Alte Klausuren und Scheinklausuren mit Lösungen. Kommen noch dazu.`,
+    items: []
+  }
+};
+const MAT_TILES = [MAT.uebungen, MAT.vortrag, MAT.pruefungen];
+
+function matFile(rel){ return MAT_DIR + rel.split("/").map(encodeURIComponent).join("/"); }
+function blattCard(b){
+  const links = [`<a href="${matFile(b.sheet)}" target="_blank" rel="noopener">📄 Aufgaben</a>`];
+  links.push(b.sol
+    ? `<a href="${matFile(b.sol)}" target="_blank" rel="noopener">${b.solLabel||"✅ Lösung"}</a>`
+    : `<span class="none">Lösung folgt</span>`);
+  return `<div class="matcard"><div class="mct">Blatt ${b.n}</div><div class="mcl">${links.join("")}</div></div>`;
+}
+
+/* =========================================================================
+   ENGINE
+   ========================================================================= */
+const app = document.getElementById("app");
+const CAT_BY_KEY = Object.fromEntries(CATS.map(c=>[c.key,c]));
+
+function typeset(el){
+  if(!window.renderMathInElement) return;
+  try{
+    renderMathInElement(el,{
+      delimiters:[
+        {left:"\\[",right:"\\]",display:true},
+        {left:"\\(",right:"\\)",display:false}
+      ],
+      throwOnError:false
+    });
+  }catch(e){ /* KaTeX-Fehler nicht fatal */ }
+}
+
+function slug(s){
+  return s.toLowerCase()
+    .replace(/[äöü]/g,m=>({"ä":"ae","ö":"oe","ü":"ue"}[m]))
+    .replace(/ß/g,"ss").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+}
+function countCards(c){ return c.blocks.reduce((n,b)=>n+b.cards.length,0); }
+
+/* ---------- Home ---------- */
+function renderHome(){
+  let h = String.raw`<div class="hero">
+    <h1>Übersicht Lineare Algebra 2</h1>
+    <p>Pro Technik eine kompakte Formel, dazu ausklappbar die <b>Idee in Worten</b> (was ist das,
+    woraus besteht es, wozu ist es gut) und ein <b>Rechenbeispiel</b>. Verständlich erklärt, offline,
+    Formeln in LaTeX-Qualität — wird nach und nach erweitert.</p>
+  </div>
+  <h2 class="sechead">⚡ Spickzettel — Handwerkszeug</h2>
+  <div class="tiles">`;
+  for(const c of CATS){
+    h += String.raw`<a class="tile g${c.g}" href="#/ref/${c.key}">
+      <span class="ti">${c.icon}</span>
+      <span><span class="tt">${c.title}</span><small>${c.tag}</small></span>
+      <span class="cnt">${countCards(c)}</span>
+    </a>`;
+  }
+  h += `</div>
+  <h2 class="sechead">📦 Übungen &amp; Prüfungen</h2>
+  <div class="tiles">`;
+  for(const m of MAT_TILES){
+    const cnt = m.items.length ? `<span class="cnt">${m.items.length}</span>` : ``;
+    h += String.raw`<a class="tile ${m.cls}" href="#/mat/${m.key}">
+      <span class="ti">${m.icon}</span>
+      <span><span class="tt">${m.title}</span><small>${m.tag}</small></span>
+      ${cnt}
+    </a>`;
+  }
+  h += `</div>`;
+  app.innerHTML = h;
+  typeset(app);
+}
+
+/* ---------- Material (Übungen & Prüfungen) ---------- */
+function renderMat(key){
+  const m = MAT[key];
+  if(!m){ renderHome(); return; }
+  let h = String.raw`<div class="crumbs"><a href="#/">Übersicht</a><span class="sep">/</span><span>${m.title}</span></div>
+    <div class="titlebar ${m.cls}"><div class="ic">${m.icon}</div><h1>${m.title}</h1></div>
+    <p class="lead">${m.lead}</p>`;
+  if(m.items.length){
+    h += `<div class="matgrid">${m.items.map(blattCard).join("")}</div>`;
+  } else {
+    h += `<div class="note">Hier erscheinen die <b>${m.title}</b> mit Aufgaben und Lösungen.
+      Dateien nach <code>assets/Uebungsblaetter/</code> legen und einen Eintrag in
+      <code>MAT.${m.key}.items</code> ergänzen.</div>`;
+  }
+  app.innerHTML = h;
+  typeset(app);
+  window.scrollTo(0,0);
+}
+
+/* ---------- Category ---------- */
+function renderCard(c){
+  let h = `<div class="tcard" id="k-${slug(c.t)}"><h4>${c.t}${c.k?` <span class="k">${c.k}</span>`:""}</h4>`;
+  if(c.def) h += `<div class="tdef">${c.def}</div>`;
+  if(c.worte) h += `<details class="example worte"><summary>🗣 In Worten erklärt</summary><div class="exbody">${c.worte}</div></details>`;
+  if(c.bsp) h += `<details class="example"><summary>✏️ Rechenbeispiel</summary><div class="exbody">${c.bsp}</div></details>`;
+  return h + `</div>`;
+}
+function renderCat(key){
+  const c = CAT_BY_KEY[key];
+  if(!c){ renderHome(); return; }
+  let h = String.raw`<div class="crumbs"><a href="#/">Übersicht</a><span class="sep">/</span><span>${c.title}</span></div>
+    <div class="titlebar g${c.g}"><div class="ic">${c.icon}</div><h1>${c.title}</h1></div>
+    <p class="lead">${c.lead}</p>`;
+  for(const b of c.blocks){
+    h += `<div class="blockh">${b.h}</div><div class="cardgrid${b.wide?" wide":""}">`;
+    h += b.cards.map(renderCard).join("");
+    h += `</div>`;
+  }
+  app.innerHTML = h;
+  typeset(app);
+  window.scrollTo(0,0);
+}
+
+/* ---------- Router ---------- */
+function route(){
+  const hash = location.hash.replace(/^#\/?/,"");
+  const mref = hash.match(/^ref\/(.+)$/);
+  const mmat = hash.match(/^mat\/(.+)$/);
+  if(mref) renderCat(mref[1].split("#")[0]);        // Anker (#k-…) vom Key trennen
+  else if(mmat) renderMat(mmat[1].split("#")[0]);
+  else renderHome();
+}
+window.addEventListener("hashchange", route);
+
+/* ---------- Search ---------- */
+const SEARCH_IX = [];
+for(const c of CATS){
+  SEARCH_IX.push({label:c.title, tag:c.tag, href:`#/ref/${c.key}`});
+  for(const b of c.blocks) for(const card of b.cards)
+    SEARCH_IX.push({label:card.t, tag:c.title, href:`#/ref/${c.key}#k-${slug(card.t)}`});
+}
+for(const m of MAT_TILES){
+  SEARCH_IX.push({label:m.title, tag:"Material", href:`#/mat/${m.key}`});
+}
+const si = document.getElementById("search");
+const res = document.getElementById("results");
+let selIdx = -1;
+function showResults(items){
+  if(!items.length){ res.classList.remove("show"); res.innerHTML=""; return; }
+  res.innerHTML = items.map((it,i)=>
+    `<a href="${it.href}" data-i="${i}"><div>${it.label}</div><div class="tag">${it.tag}</div></a>`).join("");
+  res.classList.add("show"); selIdx=-1;
+}
+si.addEventListener("input", ()=>{
+  const q = si.value.trim().toLowerCase();
+  if(!q){ showResults([]); return; }
+  showResults(SEARCH_IX.filter(it=>(it.label+" "+it.tag).toLowerCase().includes(q)).slice(0,12));
+});
+si.addEventListener("keydown", e=>{
+  const links = [...res.querySelectorAll("a")];
+  if(e.key==="ArrowDown"){ e.preventDefault(); selIdx=Math.min(selIdx+1,links.length-1); }
+  else if(e.key==="ArrowUp"){ e.preventDefault(); selIdx=Math.max(selIdx-1,0); }
+  else if(e.key==="Enter"){ if(links[selIdx]){ location.hash=links[selIdx].getAttribute("href"); si.value=""; showResults([]); si.blur(); } return; }
+  else return;
+  links.forEach((a,i)=>a.classList.toggle("active", i===selIdx));
+});
+res.addEventListener("mousedown", e=>{ const a=e.target.closest("a"); if(a){ si.value=""; setTimeout(()=>showResults([]),0); } });
+document.addEventListener("click", e=>{ if(!e.target.closest(".search")) showResults([]); });
+
+/* ---------- Theme ---------- */
+const themeBtn = document.getElementById("theme");
+function applyTheme(t){ document.documentElement.setAttribute("data-theme",t); themeBtn.textContent = t==="dark"?"☀️":"🌙"; }
+applyTheme(localStorage.getItem("lag2-theme")||"light");
+themeBtn.addEventListener("click", ()=>{
+  const t = document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark";
+  localStorage.setItem("lag2-theme",t); applyTheme(t);
+});
+typeset(document.querySelector(".brand"));   // Header-Formel einmalig rendern
+
+/* ---------- Anchor scroll after route ---------- */
+window.addEventListener("hashchange", ()=>{
+  const a = location.hash.split("#k-")[1];
+  if(a){ setTimeout(()=>{ const el=document.getElementById("k-"+a); if(el){ el.scrollIntoView({behavior:"smooth",block:"center"}); const d=el.querySelector("details"); if(d) d.open=true; } },60); }
+});
+
+route();
+</script>
+</body>
+</html>
